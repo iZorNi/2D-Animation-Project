@@ -93,19 +93,19 @@ public:
 
 	std::pair<long, long> getNextEdge();
 
-	//class PointIterator
-	//{
-	//	std::map<long int, std::shared_ptr<Point>> begin;
-	//	std::map<long int, std::shared_ptr<Point>> end;
-	//	std::function<bool(long)> filterPoints;
-	//	long searchId;
-	//	long searchCoordinateX, searchCoordinateY;
-	//public:
-	//	PointIterator(std::function<bool(long, long)> criteria = [](dPoint point){return true});
-	//	PointIterator(long id, std::function<bool(long,long)> criteria = [this](dPoint point) {return (point.first == this->searchId);});
-	//	PointIterator(int x, int y, std::function<bool(int,int,int,int)> criteria = [&](dPoint point) {return (point.second->getX() == searchCoordinateX && point.second->getX() == searchCoordinateY();});
+	class PointIterator
+	{
+		std::map<long int, std::shared_ptr<Point>>::iterator begin;
+		std::map<long int, std::shared_ptr<Point>>::iterator end;
+		std::function<bool(long)> filterPoints;
+		long searchId;
+		long searchCoordinateX, searchCoordinateY;
+	public:
+		PointIterator(std::function<bool(long, long)> criteria = [](dPoint point){return true});
+		PointIterator(long id, std::function<bool(long,long)> criteria = [this](dPoint point) {return (point.first == this->searchId);});
+		PointIterator(int x, int y, std::function<bool(int,int,int,int)> criteria = [&](dPoint point) {return (point.second->getX() == searchCoordinateX && point.second->getX() == searchCoordinateY();});
 
-	//};
+	};
 
 };
 
