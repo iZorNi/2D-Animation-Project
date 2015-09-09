@@ -81,7 +81,7 @@ public:
 		std::set<std::pair< std::pair<long int, long int>, status>> edges;
 	};
 
-	std::unique_ptr<Frame::Diff> getDiff(const Frame & frame);
+	std::unique_ptr<Frame::Diff> getDiff(std::weak_ptr<Frame> const frame);
 
 	std::pair<long, std::shared_ptr<Point>> getPoint(long id);
 

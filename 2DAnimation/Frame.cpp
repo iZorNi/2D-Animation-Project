@@ -244,7 +244,7 @@ void Frame::removeEdgeByPoints(long int a, long int b)
 	edges.erase(tmp);
 }
 
-std::unique_ptr<Frame::Diff> Frame::getDiff(const Frame & frame)
+std::unique_ptr<Frame::Diff> Frame::getDiff(std::weak_ptr<Frame> const frame)
 {
 	std::unique_ptr<Diff> res;
 	res->id = this->id;
@@ -252,8 +252,8 @@ std::unique_ptr<Frame::Diff> Frame::getDiff(const Frame & frame)
 	MIter_const fpit;
 	while (pit != this->points.end())
 	{
-		fpit = frame.points.find(pit->first);
-		if (fpit == frame.points.end())
+		fpit = frame.lock()->points.find(pit->first);
+		if (fpit == frame.lock()->points.end())
 		{
 			res->points.insert(std::make_pair(pit->first, std::make_pair(pit->second, res->ADDED)));
 		}
@@ -267,8 +267,8 @@ std::unique_ptr<Frame::Diff> Frame::getDiff(const Frame & frame)
 		++pit;
 	}
 
-	fpit = frame.points.begin();
-	while (fpit!=frame.points.end())
+	fpit = frame.lock()->points.begin();
+	while (fpit!=frame.lock()->points.end())
 	{
 		pit = this->points.find(fpit->first);
 		if (pit == this->points.end())
@@ -282,14 +282,14 @@ std::unique_ptr<Frame::Diff> Frame::getDiff(const Frame & frame)
 	SIter_const feit;
 	while (eit != this->edges.end())
 	{
-		feit = frame.edges.find(*eit);
-		if (feit == frame.edges.end())
+		feit = frame.lock()->edges.find(*eit);
+		if (feit == frame.lock()->edges.end())
 		{
 			res->edges.insert(std::make_pair(*eit,res->ADDED));
 		}
 		++eit;
 	}
-	feit = frame.edges.begin();
+	feit = frame.lock()->edges.begin();
 	while (feit != this->edges.end())
 	{
 		eit = this->edges.find(*feit);

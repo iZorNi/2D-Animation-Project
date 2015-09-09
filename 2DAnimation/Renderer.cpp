@@ -10,7 +10,7 @@ void Renderer::setSelfPointer(std::weak_ptr<Renderer> weakPtr)
 
 void Renderer::renderFrame()
 {
-	if (currentFrame != nullptr)
+	if (!currentFrame.expired())
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		renderBackground();
@@ -29,7 +29,7 @@ static void sRenderFrame()
 	}
 }
 
-void Renderer::setCurrentFrame(std::shared_ptr<Frame> frame)
+void Renderer::setCurrentFrame(std::weak_ptr<Frame> frame)
 {
 	currentFrame = frame;
 }
@@ -39,10 +39,10 @@ bool Renderer::renderPoints()
 	glPointSize(POINT_SIZE);
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glBegin(GL_POINTS);
-	std::pair<long, std::shared_ptr<Point>> point = currentFrame->resetCurrentPoint();
-	while (point != currentFrame->failurePoint)
+	std::pair<long, std::shared_ptr<Point>> point = currentFrame.lock()->resetCurrentPoint();
+	while (point != currentFrame.lock()->failurePoint)
 	{
-		if (currentFrame->isPickedPoint(point.first))
+		if (currentFrame.lock()->isPickedPoint(point.first))
 		{
 			glColor3f(.0f, 1.0f, 0.0f);
 			placePoint(point.second->getX(), point.second->getY());
@@ -52,7 +52,7 @@ bool Renderer::renderPoints()
 		{
 			placePoint(point.second->getX(), point.second->getY());
 		}
-		point = currentFrame->getNextPoint();
+		point = currentFrame.lock()->getNextPoint();
 	}
 	glEnd();
 	GLenum error = glGetError();
@@ -72,18 +72,18 @@ bool Renderer::renderEdges()
 	glLineWidth(LINE_WIDTH);
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glBegin(GL_LINES);
-	std::pair<long, long> e = currentFrame->resetCurrentEdge();
+	std::pair<long, long> e = currentFrame.lock()->resetCurrentEdge();
 	while (e.first != -1 && e.second != -1)
 	{
-		std::pair<long, std::shared_ptr<Point>> tmp1 = currentFrame->getPoint(e.first);
-		std::pair<long, std::shared_ptr<Point>> tmp2 = currentFrame->getPoint(e.second);
-		if (tmp1 != currentFrame->failurePoint && tmp2 != currentFrame->failurePoint)
+		std::pair<long, std::shared_ptr<Point>> tmp1 = currentFrame.lock()->getPoint(e.first);
+		std::pair<long, std::shared_ptr<Point>> tmp2 = currentFrame.lock()->getPoint(e.second);
+		if (tmp1 != currentFrame.lock()->failurePoint && tmp2 != currentFrame.lock()->failurePoint)
 		{
 			A = tmp1.second;
 			B = tmp2.second;
 			renderEdge(std::make_pair(A->getX(), A->getY()), std::make_pair(B->getX(), B->getY()));
 		}
-		e = currentFrame->getNextEdge();
+		e = currentFrame.lock()->getNextEdge();
 	}
 	glEnd();
 	return checkError();
@@ -102,11 +102,10 @@ bool Renderer::renderBackground()
 	return checkError();
 }
 
-bool Renderer::init(int* argcp, char **argv, std::shared_ptr<Frame> frame, int width, int height, std::weak_ptr<IUserInterfaceManager> manager)
+bool Renderer::init(int* argcp, char **argv, int width, int height, std::weak_ptr<IUserInterfaceManager> manager)
 {
 	this->manager = manager;
 	glutInit(argcp, argv);
-	currentFrame = frame;
 	glutInitContextVersion(2, 1);
 
 	//Create Double Buffered Window
@@ -135,14 +134,14 @@ bool Renderer::init(int* argcp, char **argv, std::shared_ptr<Frame> frame, int w
 
 Renderer::Renderer() :window_width(START_WIDTH), window_height(START_HEIGHT)
 {
-	currentFrame = nullptr;
+	currentFrame.reset();
 }
 
 Renderer::Renderer(unsigned int width, unsigned int height)
 {
 	window_width = width;
 	window_height = height;
-	currentFrame = nullptr;
+	currentFrame.reset();
 }
 
 bool Renderer::restoreWindowSize(int width, int height)
@@ -190,7 +189,7 @@ bool Renderer::renderFrameNumber()
 {
 	const int size = 25;
 	char s[size];
-	sprintf_s(s, sizeof(s), "%d", currentFrame->getID()+1);
+	sprintf_s(s, sizeof(s), "%d", currentFrame.lock()->getID()+1);
 	unsigned char str[size];
 	for (int i = 0; i < sizeof(s);++i)
 	{
@@ -208,5 +207,5 @@ bool Renderer::renderFrameNumber()
 
 Renderer::~Renderer()
 {
-	currentFrame = nullptr;
+	currentFrame.reset();
 }

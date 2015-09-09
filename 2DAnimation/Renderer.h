@@ -21,7 +21,7 @@ class Renderer
 	unsigned int window_height;
 
 	std::weak_ptr<IUserInterfaceManager> manager;
-	std::shared_ptr<Frame> currentFrame;
+	std::weak_ptr<Frame> currentFrame;
 	void placePoint(int x,int y);
 	void renderEdge(std::pair<int, int> A, std::pair<int, int> B);
 	bool renderBackground();
@@ -37,9 +37,9 @@ public:
 	~Renderer();
 	Renderer(unsigned int width, unsigned int height);
 	void renderFrame();
-	void setCurrentFrame(std::shared_ptr<Frame> frame);
+	void setCurrentFrame(std::weak_ptr<Frame> frame);
 	bool restoreWindowSize(int width,int height);
-	bool init(int* argcp, char **argv, std::shared_ptr<Frame> frame, int width, int height, std::weak_ptr<IUserInterfaceManager> uiManager);
+	bool init(int* argcp, char **argv, int width, int height, std::weak_ptr<IUserInterfaceManager> uiManager);
 	void setWindowSize(int width, int height);
 };
 
