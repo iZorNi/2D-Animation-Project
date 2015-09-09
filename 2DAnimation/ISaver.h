@@ -1,12 +1,12 @@
 #pragma once
 #include <memory>
-#include "IFrameContainer.h"
+#include "IFrameConroller.h"
 
 class ISaver
 {
 public:
 	ISaver() {};
 	virtual ~ISaver() {}
-	virtual bool saveContainer(IFrameContainer& container) = 0;
-	virtual void setPath(char* path) = 0;
+	virtual bool saveAnimation(std::weak_ptr<IFrameController> container) = 0;
+	virtual void setPath(std::string path) = 0;
 };

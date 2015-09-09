@@ -1,7 +1,12 @@
 #include "Renderer.h"
 
 
-Renderer* Renderer::wthis;
+static std::weak_ptr<Renderer> weakPtrToThis;
+
+void Renderer::setSelfPointer(std::weak_ptr<Renderer> weakPtr)
+{
+	weakPtrToThis = weakPtr;
+}
 
 void Renderer::renderFrame()
 {
@@ -16,11 +21,11 @@ void Renderer::renderFrame()
 	}
 }
 
-void Renderer::sRenderFrame()
+static void sRenderFrame()
 {
-	if(wthis != nullptr)
+	if(!weakPtrToThis.expired())
 	{
-		wthis->renderFrame();
+		weakPtrToThis.lock()->renderFrame();
 	}
 }
 
@@ -31,14 +36,13 @@ void Renderer::setCurrentFrame(std::shared_ptr<Frame> frame)
 
 bool Renderer::renderPoints()
 {
-	long pickedPoint = currentFrame->getPickedPointId();
 	glPointSize(POINT_SIZE);
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glBegin(GL_POINTS);
 	std::pair<long, std::shared_ptr<Point>> point = currentFrame->resetCurrentPoint();
 	while (point != currentFrame->failurePoint)
 	{
-		if (point.first == pickedPoint)
+		if (currentFrame->isPickedPoint(point.first))
 		{
 			glColor3f(.0f, 1.0f, 0.0f);
 			placePoint(point.second->getX(), point.second->getY());
@@ -98,9 +102,9 @@ bool Renderer::renderBackground()
 	return checkError();
 }
 
-bool Renderer::init(int* argcp, char **argv, std::shared_ptr<Frame> frame, int width, int height)
+bool Renderer::init(int* argcp, char **argv, std::shared_ptr<Frame> frame, int width, int height, std::weak_ptr<IUserInterfaceManager> manager)
 {
-	wthis = this;
+	this->manager = manager;
 	glutInit(argcp, argv);
 	currentFrame = frame;
 	glutInitContextVersion(2, 1);
@@ -109,8 +113,8 @@ bool Renderer::init(int* argcp, char **argv, std::shared_ptr<Frame> frame, int w
 	glutInitDisplayMode(GLUT_DOUBLE);
 	setWindowSize(width, height);
 	glutInitWindowSize(window_width, window_height);
-	TEXT_POS_X = window_width - glutBitmapWidth(font, 'W');
-	TEXT_POS_Y = glutBitmapHeight(font);
+	TEXT_RENDER_POSITION_X = window_width - glutBitmapWidth(font, 'W');
+	TEXT_RENDER_POSITION_Y = glutBitmapHeight(font);
 	glutCreateWindow(name);
 
 	glMatrixMode(GL_PROJECTION);
@@ -123,7 +127,7 @@ bool Renderer::init(int* argcp, char **argv, std::shared_ptr<Frame> frame, int w
 
 	glEnable(GL_DEPTH_TEST);
 
-	glutDisplayFunc(Renderer::sRenderFrame);
+	glutDisplayFunc(sRenderFrame);
 
 	//Check for error
 	return checkError();
@@ -193,7 +197,7 @@ bool Renderer::renderFrameNumber()
 		str[i] = static_cast<unsigned char>(s[i]);
 	}
 	int offsetX = glutBitmapLength(font, str);
-	glRasterPos2d(TEXT_POS_X-offsetX, TEXT_POS_Y);
+	glRasterPos2d(TEXT_RENDER_POSITION_X-offsetX, TEXT_RENDER_POSITION_Y);
 	glColor3f(0.0f, 0.0f, 1.0f);
 	for (int i = 0; s[i] !='\0';++i)
 	{

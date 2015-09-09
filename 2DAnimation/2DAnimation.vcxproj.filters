@@ -30,9 +30,6 @@
     <ClInclude Include="Frame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FrameContainer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Point.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -45,29 +42,38 @@
     <ClInclude Include="ISaver.h">
       <Filter>Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="IFrameContainer.h">
-      <Filter>Interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="ILoader.h">
       <Filter>Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameSaver.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AnimationManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OGLInputManager.h">
+    <ClInclude Include="OpenGLManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OGLManager.h">
+    <ClInclude Include="OpenGLInputManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="IOGLManager.h">
+    <ClInclude Include="IUserInterfaceManager.h">
       <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="IManager.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IFrameConroller.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="MenuManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationSaver.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -83,25 +89,28 @@
     <ClCompile Include="Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FrameContainer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FileManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FrameLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FrameSaver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AnimationManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="OGLInputManager.cpp">
+    <ClCompile Include="OpenGLInputManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="OGLManager.cpp">
+    <ClCompile Include="OpenGLManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FrameController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MenuManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationSaver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

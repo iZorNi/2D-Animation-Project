@@ -155,18 +155,20 @@
   <ItemGroup>
     <ClInclude Include="AnimationManager.h" />
     <ClInclude Include="Frame.h" />
-    <ClInclude Include="FrameContainer.h" />
-    <ClInclude Include="FrameLoader.h" />
-    <ClInclude Include="IOGLManager.h" />
+    <ClInclude Include="FrameController.h" />
+    <ClInclude Include="AnimationLoader.h" />
+    <ClInclude Include="IManager.h" />
+    <ClInclude Include="IUserInterfaceManager.h" />
     <ClInclude Include="ILoader.h" />
-    <ClInclude Include="IFrameContainer.h" />
+    <ClInclude Include="IFrameConroller.h" />
     <ClInclude Include="ISaver.h" />
-    <ClInclude Include="OGLInputManager.h" />
+    <ClInclude Include="MenuManager.h" />
+    <ClInclude Include="OpenGLInputManager.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="FileManager.h" />
-    <ClInclude Include="OGLManager.h" />
-    <ClInclude Include="FrameSaver.h" />
+    <ClInclude Include="OpenGLManager.h" />
+    <ClInclude Include="AnimationSaver.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -174,14 +176,15 @@
     <ClCompile Include="2DAnimation.cpp" />
     <ClCompile Include="AnimationManager.cpp" />
     <ClCompile Include="Frame.cpp" />
-    <ClCompile Include="FrameContainer.cpp" />
-    <ClCompile Include="FrameLoader.cpp" />
-    <ClCompile Include="OGLInputManager.cpp" />
+    <ClCompile Include="FrameController.cpp" />
+    <ClCompile Include="AnimationLoader.cpp" />
+    <ClCompile Include="MenuManager.cpp" />
+    <ClCompile Include="OpenGLInputManager.cpp" />
+    <ClCompile Include="OpenGLManager.cpp" />
     <ClCompile Include="Point.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="FileManager.cpp" />
-    <ClCompile Include="OGLManager.cpp" />
-    <ClCompile Include="FrameSaver.cpp" />
+    <ClCompile Include="AnimationSaver.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,7 +1,7 @@
 #include "Frame.h"
 
 
-Frame::Frame()
+Frame::Frame() 
 {
 	id = 0;
 	point_next_id = 0;
@@ -86,74 +86,59 @@ Frame::MIter Frame::getPointByCoord(int x, int y)
 
 long int Frame::addPoint(uint x, uint y)
 {
-	std::shared_ptr<Point> tmp = std::make_shared<Point>(x, y);
-	MIter end = points.end();
-	points.insert(std::make_pair(point_next_id++, tmp));
-	if (pickedPoint == end)
-	{
-		pickedPoint = points.end();
-	}
-	return point_next_id - 1;
+	int res = -1;
+	if(!tryPickPoint(x,y) && !tryPickEdge(x,y))
+		res =addPoint(point_next_id, x, y);
+	return res;
 }
 
 long int Frame::addPoint(long int id, uint x, uint y)
 {
 	pickedPoint = points.end();
-	std::shared_ptr<Point> tmp = std::make_shared<Point>(x, y);
-	points.insert(std::make_pair(id, tmp));
+	points.insert(std::make_pair(id, std::make_shared<Point>(x, y)));
 	point_next_id = id >= point_next_id ? id + 1 : point_next_id;
 	return id;
 }
 
 bool Frame::tryPickPoint(int x, int y)
 {
-	MIter it = getPointByCoord(x, y);
-	MIter end = points.end();
-	if (it != end && pickedPoint != end)
+	auto it = getPointByCoord(x, y);
+	if (it != points.end() && pickedPoint != points.end())
 	{
-
-			if (pickedPoint == it)
-			{
-				pickedPoint = end;
-			}
-			else
+			if (pickedPoint != it)
 			{
 				addEdge(pickedPoint->first, it->first);
-				pickedPoint = end;
 			}
+			pickedPoint = points.end();
 	}
 	else
 	{
 		pickedPoint = it;
 	}
-	return (pickedPoint != end && it!=end);
+	return (pickedPoint != points.end() && it!= points.end());
 }
 
 void Frame::movePoint(int x, int y)
 {
-	x = x < 0 ? 0 : x;
-	y = y < 0 ? 0 : y;
 	if (pickedPoint != points.end())
 	{
+		x = x < 0 ? 0 : x;
+		y = y < 0 ? 0 : y;
 		pickedPoint->second->setX(x);
 		pickedPoint->second->setY(y);
 	}
 }
 
-void Frame::removePoint()
+void Frame::removePoint(int x, int y)
 {
-	if (pickedPoint != points.end())
+	pickedPoint = points.end();
+	if (tryPickPoint(x,y))
 	{
 		//delete pickedPoint->second;
 		removeConnectedEdges(pickedPoint->first);
 		points.erase(pickedPoint);
 		pickedPoint = points.end();
 	}
-}
-
-void Frame::freePoint()
-{
-	pickedPoint = points.end();
 }
 
 void Frame::removeConnectedEdges(long int id)
@@ -229,6 +214,7 @@ bool Frame::addEdge(long int A, long int B)
 {
 	bool res;
 	pickedEdge = edges.end();
+	pickedPoint = points.end();
 	if (A > B)
 	{
 		std::swap(A, B);
@@ -241,18 +227,21 @@ bool Frame::addEdge(long int A, long int B)
 	return res;
 }
 
-void Frame::freeEdge()
+void Frame::removeEdge(int x, int y)
 {
-	pickedEdge = edges.end();
-}
-
-void Frame::removeEdge()
-{
-	if (pickedEdge != edges.end())
+	if (tryPickEdge(x,y))
 	{
 		edges.erase(pickedEdge);
 		pickedEdge = edges.end();
 	}
+}
+
+void Frame::removeEdgeByPoints(long int a, long int b)
+{
+	if (a > b)
+		std::swap(a, b);
+	auto tmp = edges.find(std::make_pair(a, b));
+	edges.erase(tmp);
 }
 
 std::unique_ptr<Frame::Diff> Frame::getDiff(const Frame & frame)
@@ -313,20 +302,10 @@ std::unique_ptr<Frame::Diff> Frame::getDiff(const Frame & frame)
 	return res;
 }
 
-bool Frame::pickPoint(long int id)
+bool Frame::tryPickPoint(long int id)
 {
 	pickedPoint = points.find(id);
 	return pickedPoint != points.end();
-}
-
-
-
-bool Frame::pickEdge(long int a, long int b)
-{
-	if (a > b)
-		std::swap(a, b);
-	pickedEdge = edges.find(std::make_pair(a, b));
-	return pickedEdge != edges.end();
 }
 
 int Frame::getNumberOfPoints()
@@ -339,18 +318,9 @@ int Frame::getNumberOfEdges()
 	return edges.size();
 }
 
-int Frame::getPickedPointId()
+bool Frame::isPickedPoint(long int id)
 {
-	long res;
-	if (pickedPoint == points.end())
-	{
-		res = failurePoint.first;
-	}
-	else
-	{
-		res = this->pickedPoint->first;
-	}
-	return res;
+	return ((pickedPoint != points.end()) && (pickedPoint->first == id));
 }
 
 std::pair<long, std::shared_ptr<Point>> Frame::getNextPoint()
@@ -410,6 +380,5 @@ std::pair<long, long> Frame::getNextEdge()
 	}
 	return res;
 }
-
 
  

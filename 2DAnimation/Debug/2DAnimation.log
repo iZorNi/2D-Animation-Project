@@ -1,23 +1,27 @@
-﻿Build started 09.09.2015 12:12:50.
+﻿Build started 09.09.2015 21:34:13.
      1>Project "D:\OpenGL\2DAnimation\2DAnimation\2DAnimation.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\" /Fd"Debug\vc140.pdb" /Gd /TP /analyze- /errorReport:prompt Frame.cpp
-         Frame.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\" /Fd"Debug\vc140.pdb" /Gd /TP /analyze- /errorReport:prompt FileManager.cpp OpenGLManager.cpp
+         OpenGLManager.cpp
+         Generating Code...
+         Skipping... (no relevant changes detected)
+         FileManager.cpp
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\OpenGL\2DAnimation\Debug\2DAnimation.exe" /INCREMENTAL /NOLOGO /LIBPATH:Dependencies\glew /LIBPATH:Dependencies\freeglut kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib opengl32.lib freeglut.lib glew32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"D:\OpenGL\2DAnimation\Debug\2DAnimation.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\OpenGL\2DAnimation\Debug\2DAnimation.lib" /MACHINE:X86 Debug\2DAnimation.obj
          Debug\AnimationManager.obj
          Debug\Frame.obj
-         Debug\FrameContainer.obj
-         Debug\FrameLoader.obj
-         Debug\OGLInputManager.obj
+         Debug\FrameController.obj
+         Debug\AnimationLoader.obj
+         Debug\MenuManager.obj
+         Debug\OpenGLInputManager.obj
+         Debug\OpenGLManager.obj
          Debug\Point.obj
          Debug\Renderer.obj
          Debug\FileManager.obj
-         Debug\OGLManager.obj
-         Debug\FrameSaver.obj
+         Debug\AnimationSaver.obj
          2DAnimation.vcxproj -> D:\OpenGL\2DAnimation\Debug\2DAnimation.exe
      1>Done Building Project "D:\OpenGL\2DAnimation\2DAnimation\2DAnimation.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.90
+Time Elapsed 00:00:00.81
