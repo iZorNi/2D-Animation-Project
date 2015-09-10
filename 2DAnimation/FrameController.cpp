@@ -105,3 +105,113 @@ void FrameController::clear()
 		frames.erase(it++);
 	}
 }
+
+FrameController::FrameIterator::FrameIterator(LIter begin, LIter end, std::function<bool(std::shared_ptr<Frame>)> qualifier)
+	: _begin(begin), _end(end), qualifier(qualifier)
+{
+}
+FrameController::FrameIterator::FrameIterator(LIter begin, LIter end, int id, std::function<bool(std::shared_ptr<Frame>)> qualifier)
+	: _begin(begin), _end(end), qualifier(qualifier), qualifierID(id)
+{
+}
+void FrameController::FrameIterator::initCurrent()
+{
+	_current = _begin;
+	while (!qualifier(*_current))
+	{
+		++_current;
+	}
+}
+bool FrameController::FrameIterator::frameWithIdQualifier(std::shared_ptr<Frame> frame)
+{
+	return true;
+}
+bool FrameController::FrameIterator::allFramesQualifier(std::shared_ptr<Frame> frame)
+{
+	return frame->getID() == qualifierID;
+}
+
+std::shared_ptr<Frame> FrameController::FrameIterator::operator*()
+{
+	return *(_current);
+}
+std::shared_ptr<Frame> FrameController::FrameIterator::operator->()
+{
+	return *(_current);
+}
+FrameController::FrameIterator& FrameController::FrameIterator::operator++()
+{
+	if (_current != _end)
+	{
+		do
+		{
+			++_current;
+		} while (_current != _end && !qualifier(*_current));
+	}
+	return *this;
+}
+FrameController::FrameIterator FrameController::FrameIterator::operator++(int)
+{
+	auto tmp = *this;
+	if (_current != _end)
+	{
+		do
+		{
+			++_current;
+		} while (_current != _end && !qualifier(*_current));
+	}
+	return tmp;
+}
+FrameController::FrameIterator& FrameController::FrameIterator::operator--()
+{
+	if (_current != _begin)
+	{
+		--_current;
+		while (!qualifier(*_current))
+		{
+			if (_current == _begin)
+			{
+				_current = _end;
+				break;
+			}
+			--_current;
+		}
+	}
+	return *this;
+}
+FrameController::FrameIterator FrameController::FrameIterator::operator--(int)
+{
+	auto tmp = *this;
+	if (_current != _begin)
+	{
+		--_current;
+		while (!qualifier(*_current))
+		{
+			if (_current == _begin)
+			{
+				_current = _end;
+				break;
+			}
+			--_current;
+		}
+	}
+	return tmp;
+}
+FrameController::FrameIterator& FrameController::FrameIterator::operator=(const FrameIterator& value)
+{
+	this->qualifierID = value.qualifierID;
+	this->_current = value._current;
+	return *this;
+}
+const FrameController::FrameIterator FrameController::FrameIterator::end()
+{
+	auto tmp = *this;
+	tmp._current = _begin;
+	return tmp;
+}
+const FrameController::FrameIterator FrameController::FrameIterator::begin()
+{
+	auto tmp = *this;
+	tmp._current = _begin;
+	return tmp;
+}

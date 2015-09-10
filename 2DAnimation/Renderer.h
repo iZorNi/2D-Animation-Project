@@ -37,6 +37,9 @@ public:
 	~Renderer();
 	Renderer(unsigned int width, unsigned int height);
 	void renderFrame();
+	void renderFrame(Frame::PointIterator point, Frame::EdgeIterator edge);
+	bool renderPoints(Frame::PointIterator point);
+	bool renderEdges(Frame::EdgeIterator edge);
 	void setCurrentFrame(std::weak_ptr<Frame> frame);
 	bool restoreWindowSize(int width,int height);
 	bool init(int* argcp, char **argv, int width, int height, std::weak_ptr<IUserInterfaceManager> uiManager);

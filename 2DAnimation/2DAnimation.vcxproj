@@ -163,6 +163,7 @@
     <ClInclude Include="IFrameConroller.h" />
     <ClInclude Include="ISaver.h" />
     <ClInclude Include="MenuManager.h" />
+    <ClInclude Include="MyIterator.h" />
     <ClInclude Include="OpenGLInputManager.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="Renderer.h" />

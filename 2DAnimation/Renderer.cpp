@@ -21,6 +21,55 @@ void Renderer::renderFrame()
 	}
 }
 
+void Renderer::renderFrame(Frame::PointIterator point, Frame::EdgeIterator edge)
+{
+	renderBackground();
+	renderPoints(point);
+	renderEdges(edge);
+	//renderFrameNumber();
+	glutSwapBuffers();
+}
+
+bool Renderer::renderPoints(Frame::PointIterator point)
+{
+	glPointSize(POINT_SIZE);
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glBegin(GL_POINTS);
+	point = point.begin();
+	while (!(point == point.end()))
+	{
+		if (point.isPicked())
+		{
+			glColor3f(.0f, 1.0f, 0.0f);
+			placePoint(point->getX(), point->getY());
+			glColor3f(1.0f, 0.0f, 0.0f);
+		}
+		else
+		{
+			placePoint(point->getX(), point->getY());
+		}
+		++point;
+	}
+	glEnd();
+	GLenum error = glGetError();
+	return checkError();
+
+}
+bool Renderer::renderEdges(Frame::EdgeIterator edge)
+{
+	glLineWidth(LINE_WIDTH);
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glBegin(GL_LINES);
+	edge = edge.begin();
+	while (!(edge == edge.end()))
+	{
+		renderEdge(edge.getPointsCoord().first, edge.getPointsCoord().second);
+		++edge;
+	}
+	glEnd();
+	return checkError();
+}
+
 static void sRenderFrame()
 {
 	if(!weakPtrToThis.expired())

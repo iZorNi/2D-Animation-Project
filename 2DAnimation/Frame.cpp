@@ -143,26 +143,26 @@ void Frame::removePoint(int x, int y)
 
 void Frame::removeConnectedEdges(long int id)
 {
-	SIter end = edges.end();
-	SIter e = edges.begin();
-	if (e != end)
+	auto end = edges.end();
+	auto edgeIterator = edges.begin();
+	if (edgeIterator != end)
 	{
-		while (e->first != id)
+		while (edgeIterator->first != id)
 		{
-			if (e->second == id)
-				edges.erase(e++);
+			if (edgeIterator->second == id)
+				edges.erase(edgeIterator++);
 			else
-				++e;
-			if (e == end)
+				++edgeIterator;
+			if (edgeIterator == end)
 				return;
 		}
 	}
-	if (e != end)
+	if (edgeIterator != end)
 	{
-		while (e->first == id)
+		while (edgeIterator->first == id)
 		{
-			edges.erase(e++);
-			if (e == end)
+			edges.erase(edgeIterator++);
+			if (edgeIterator == end)
 				return;
 		}
 	}
@@ -381,4 +381,381 @@ std::pair<long, long> Frame::getNextEdge()
 	return res;
 }
 
- 
+bool Frame::PointIterator::allPointsQualifier(dPoint& point)
+{
+	return true;
+}
+
+bool Frame::PointIterator::pointWithCoordQualifier(dPoint& point)
+{
+	return (point.second->getX() == qualifierCoordinateX && point.second->getY() == qualifierCoordinateY);
+}
+
+bool Frame::PointIterator::pointWithIdQualifier(dPoint& point)
+{
+	return point.first == qualifierID;
+}
+
+Frame::PointIterator::PointIterator(Frame* frame, MIter begin, MIter end, std::function<bool(dPoint&)> qualifier):
+	_begin(begin), _end(end), qualifier(qualifier), frame(frame)
+{
+	initCurrent();
+}
+
+Frame::PointIterator::PointIterator(Frame* frame, MIter begin, MIter end, long id, std::function<bool(dPoint&)> qualifier) :
+	_begin(begin), _end(end), frame(frame), qualifierID(id), qualifier(qualifier)
+{
+	initCurrent();
+}
+
+Frame::PointIterator::PointIterator(Frame* frame, MIter begin, MIter end, int x, int y, std::function<bool(dPoint&)> qualifier) :
+	_begin(begin), _end(end), frame(frame), qualifierCoordinateX(x), qualifierCoordinateY(y), qualifier(qualifier)
+{
+	initCurrent();
+}
+
+Frame::PointIterator::PointIterator(const PointIterator& value)
+{
+	this->_begin = value._begin;
+	this->_end = value._end;
+	this->_current = value._current;
+	qualifierCoordinateX = value.qualifierCoordinateX;
+	qualifierCoordinateY = value.qualifierCoordinateY;
+	qualifierID = value.qualifierID;
+}
+
+void Frame::PointIterator::initCurrent()
+{
+	_current = _begin;
+	while (!qualifier(*_current))
+	{
+		++_current;
+	}
+	_begin = _current;
+}
+
+Frame::PointIterator& Frame::PointIterator::setQualifierCoords(int x, int y)
+{
+	qualifierCoordinateX = x;
+	qualifierCoordinateY = y;
+	return *this;
+}
+
+Frame::PointIterator& Frame::PointIterator::setIdQualifier(long id)
+{
+	qualifierID = id;
+	return *this;
+}
+
+Point Frame::PointIterator::operator*()
+{
+	return *(_current->second);
+}
+
+Frame::PointIterator& Frame::PointIterator::operator++()
+{
+	if (_current != _end)
+	{
+		do
+		{
+			++_current;
+		} while (_current != _end && !qualifier(*_current));
+	}
+	return *this;
+}
+
+Frame::PointIterator Frame::PointIterator::operator++(int)
+{
+	auto tmp = *this;
+	if (_current != _end)
+	{
+		do
+		{
+			++_current;
+		} while (_current != _end && !qualifier(*_current));
+	}
+	return tmp;
+}
+
+Frame::PointIterator& Frame::PointIterator::operator--()
+{
+	if (_current != _begin)
+	{
+		--_current;
+		while (!qualifier(*_current))
+		{
+			if (_current == _begin)
+			{
+				_current = _end;
+				break;
+			}
+			--_current;
+		}
+	}
+	return *this;
+}
+
+Frame::PointIterator Frame::PointIterator::operator--(int)
+{
+	auto tmp = *this;
+	if (_current != _begin)
+	{
+		--_current;
+		while (!qualifier(*_current))
+		{
+			if (_current == _begin)
+			{
+				_current = _end;
+				break;
+			}
+			--_current;
+		}
+	}
+	return tmp;
+}
+
+Frame::PointIterator& Frame::PointIterator::operator=(const Frame::PointIterator& value)
+{
+	this->_current = value._current;
+	qualifierCoordinateX = value.qualifierCoordinateX;
+	qualifierCoordinateY = value.qualifierCoordinateY;
+	qualifierID = value.qualifierID;
+	return *this;
+}
+
+bool Frame::PointIterator::operator==(Frame::PointIterator& value)
+{
+
+	if (   this->_current != value._current
+		|| this->_begin != value._begin 
+		|| this->_end != value._end)
+	{
+		return false;
+	}
+	if (   this->qualifierID != value.qualifierID 
+		|| this->qualifierCoordinateX != value.qualifierCoordinateX 
+		|| this->qualifierCoordinateY != value.qualifierCoordinateY)
+	{
+		return false;
+	}
+	return true;
+}
+
+Frame::PointIterator Frame::PointIterator::end()
+{
+	auto tmp = *this;
+	tmp._current = _begin;
+	return tmp;
+}
+
+Frame::PointIterator Frame::PointIterator::begin()
+{
+	auto tmp = *this;
+	tmp._current = _begin;
+	return tmp;
+}
+
+bool Frame::PointIterator::isPicked()
+{
+	return frame->pickedPoint == _current;
+}
+
+std::shared_ptr<Point> Frame::PointIterator::operator->()
+{
+	return _current->second;
+}
+
+Frame::EdgeIterator::EdgeIterator(Frame* frame,SIter begin, SIter end, std::function<bool(dEdge&)> qualifier):
+	_begin(begin), _end(end), qualifier(qualifier), frame(frame)
+{
+	initCurrent();
+}
+Frame::EdgeIterator::EdgeIterator(Frame* frame, SIter begin, SIter end, long a, long b, std::function<bool(dEdge&)> qualifier):
+	_begin(begin), _end(end), qualifier(qualifier), frame(frame)
+{
+	setQualifierPoints(a, b);
+	initCurrent();
+}
+Frame::EdgeIterator::EdgeIterator(Frame* frame, SIter begin, SIter end, int x, int y, std::function<bool(dEdge&)> qualifier):
+_begin(begin), _end(end), qualifier(qualifier), frame(frame), qualifierCoordinateX(x), qualifierCoordinateY(y)
+{
+	initCurrent();
+}
+
+void Frame::EdgeIterator::initCurrent()
+{
+	_current = _begin;
+	while (!qualifier(*_current))
+	{
+		++_current;
+	}
+	_begin = _current;
+}
+
+bool Frame::EdgeIterator::edgeWithPointsQualifier(dEdge& edge)
+{
+	return (edge.first == qualifierPointIdA && edge.second == qualifierPointIdB);
+}
+bool Frame::EdgeIterator::edgeByCoordQualifier(dEdge& edge)
+{
+	std::shared_ptr<Point> p1 = (frame->points.find(edge.first))->second;
+	std::shared_ptr<Point> p2 = (frame->points.find(edge.second))->second;
+	bool exteriorProductCheck = false;
+	int exteriorProduct = (p2->getX() - p1->getX())*(qualifierCoordinateY - p1->getY()) - (qualifierCoordinateX - p1->getX())*(p2->getY() - p1->getY());
+	if (exteriorProduct == 0)
+	{
+		exteriorProduct = true;
+	}
+	else
+	{
+		int exteriorProduct1 = (p2->getX() - p1->getX())*((qualifierCoordinateY - 1) - p1->getY()) - ((qualifierCoordinateX - 1) - p1->getX())*(p2->getY() - p1->getY());
+		int exteriorProduct2 = (p2->getX() - p1->getX())*((qualifierCoordinateY + 1) - p1->getY()) - ((qualifierCoordinateX + 1) - p1->getX())*(p2->getY() - p1->getY());
+		exteriorProductCheck = getSign(exteriorProduct) != getSign(exteriorProduct1) || getSign(exteriorProduct) != getSign(exteriorProduct2);
+	}
+
+	int dotProduct = (p1->getX() - qualifierCoordinateX)*(p2->getX() - qualifierCoordinateX) + (p1->getY() - qualifierCoordinateY)*(p2->getY() - qualifierCoordinateY);
+	return exteriorProductCheck && dotProduct <= 0;
+}
+bool Frame::EdgeIterator::allEdgesQualifier(dEdge& edge)
+{
+	return true;
+}
+
+Frame::EdgeIterator& Frame::EdgeIterator::setQualifierCoords(int x, int y)
+{
+	qualifierCoordinateX = x;
+	qualifierCoordinateY = y;
+	return *this;
+}
+Frame::EdgeIterator& Frame::EdgeIterator::setQualifierPoints(long a, long b)
+{
+	qualifierPointIdA = a;
+	qualifierPointIdB = b;
+	return *this;
+}
+
+std::pair<long, long> Frame::EdgeIterator::operator*()
+{
+	return *_current;
+}
+
+Frame::SIter Frame::EdgeIterator::operator->()
+{
+	return _current;
+}
+
+Frame::EdgeIterator& Frame::EdgeIterator::operator++()
+{
+	if (_current != _end)
+	{
+		do
+		{
+			++_current;
+		} while (_current != _end && !qualifier(*_current));
+	}
+	return *this;
+}
+
+Frame::EdgeIterator Frame::EdgeIterator::operator++(int)
+{
+	auto tmp = *this;
+	if (_current != _end)
+	{
+		do
+		{
+			++_current;
+		} while (_current != _end && !qualifier(*_current));
+	}
+	return tmp;
+}
+
+Frame::EdgeIterator& Frame::EdgeIterator::operator--()
+{
+	if (_current != _begin)
+	{
+		--_current;
+		while (!qualifier(*_current))
+		{
+			if (_current == _begin)
+			{
+				_current = _end;
+				break;
+			}
+			--_current;
+		}
+	}
+	return *this;
+}
+
+Frame::EdgeIterator Frame::EdgeIterator::operator--(int)
+{
+	auto tmp = *this;
+	if (_current != _begin)
+	{
+		--_current;
+		while (!qualifier(*_current))
+		{
+			if (_current == _begin)
+			{
+				_current = _end;
+				break;
+			}
+			--_current;
+		}
+	}
+	return tmp;
+}
+
+bool Frame::EdgeIterator::operator==(Frame::EdgeIterator& value)
+{
+
+	if (this->_current != value._current
+		|| this->_begin != value._begin
+		|| this->_end != value._end)
+	{
+		return false;
+	}
+	if (this->qualifierPointIdA != value.qualifierPointIdA
+		|| this->qualifierPointIdB != value.qualifierPointIdB
+		|| this->qualifierCoordinateX != value.qualifierCoordinateX
+		|| this->qualifierCoordinateY != value.qualifierCoordinateY)
+	{
+		return false;
+	}
+	return true;
+}
+
+Frame::EdgeIterator& Frame::EdgeIterator::operator=(const EdgeIterator& value)
+{
+	this->qualifierPointIdA = value.qualifierPointIdA;
+	this->qualifierPointIdB = value.qualifierPointIdB;
+	this->qualifierCoordinateX = value.qualifierCoordinateX;
+	this->qualifierCoordinateY = value.qualifierCoordinateY;
+	this->_current = value._current;
+	return *this;
+}
+
+Frame::EdgeIterator Frame::EdgeIterator::end()
+{
+	auto tmp = *this;
+	tmp._current = _end;
+	return tmp;
+}
+
+Frame::EdgeIterator Frame::EdgeIterator::begin()
+{
+	auto tmp = *this;
+	tmp._current = _begin;
+	return tmp;
+}
+
+std::pair<std::pair<int, int>, std::pair<int, int>> Frame::EdgeIterator::getPointsCoord()
+{
+	int x1 = frame->points.find(_current->first)->second->getX();
+	int y1 = frame->points.find(_current->first)->second->getY();
+	int x2 = frame->points.find(_current->second)->second->getX();
+	int y2 = frame->points.find(_current->second)->second->getY();
+	std::pair<int, int> firstPair = std::make_pair(x1, y1);
+	std::pair<int, int> secondPair = std::make_pair(x2, y2);
+	return std::make_pair(firstPair, secondPair);
+}

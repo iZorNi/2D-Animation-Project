@@ -75,6 +75,9 @@
     <ClInclude Include="AnimationSaver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MyIterator.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="2DAnimation.cpp">

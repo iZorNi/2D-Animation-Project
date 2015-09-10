@@ -5,8 +5,6 @@
 
 class Frame
 {
-
-	typedef std::pair<long, std::shared_ptr<Point>> dPoint;
 	uint id;
 	long int point_next_id;
 	std::map<long int,std::shared_ptr<Point>> points;
@@ -95,16 +93,69 @@ public:
 
 	class PointIterator
 	{
-		std::map<long int, std::shared_ptr<Point>>::iterator begin;
-		std::map<long int, std::shared_ptr<Point>>::iterator end;
-		std::function<bool(long)> filterPoints;
-		long searchId;
-		long searchCoordinateX, searchCoordinateY;
+		typedef std::pair<const long, std::shared_ptr<Point>> dPoint;
+		MIter _begin;
+		MIter _end;
+		MIter _current;
+		Frame* frame;
+		std::function<bool(dPoint&)> qualifier;
+		void initCurrent();
+		long qualifierID;
+		long qualifierCoordinateX, qualifierCoordinateY;
 	public:
-		PointIterator(std::function<bool(long, long)> criteria = [](dPoint point){return true});
-		PointIterator(long id, std::function<bool(long,long)> criteria = [this](dPoint point) {return (point.first == this->searchId);});
-		PointIterator(int x, int y, std::function<bool(int,int,int,int)> criteria = [&](dPoint point) {return (point.second->getX() == searchCoordinateX && point.second->getX() == searchCoordinateY();});
+		PointIterator(Frame* frame, MIter begin, MIter end, std::function<bool(dPoint&)> qualifier = &allPointsQualifier);
+		PointIterator(Frame* frame, MIter begin, MIter end, long a, std::function<bool(dPoint&)> qualifier = &pointWithIdQualifier);
+		PointIterator(Frame* frame, MIter begin, MIter end, int x, int y, std::function<bool(dPoint&)> qualifier = &pointWithCoordQualifier);
+		PointIterator(const PointIterator& value);
+		PointIterator& setQualifierCoords(int x, int y);
+		PointIterator& setIdQualifier(long id);
+		bool pointWithCoordQualifier(dPoint& point);
+		bool pointWithIdQualifier(dPoint& point);
+		bool allPointsQualifier(dPoint& point);
+		Point operator*();
+		std::shared_ptr<Point> operator->();
+		PointIterator& operator++();
+		PointIterator operator++(int);
+		PointIterator& operator--();
+		PointIterator operator--(int);
+		PointIterator& operator=(const PointIterator& value);
+		bool operator==(PointIterator& value);
+		PointIterator end();
+		PointIterator begin();
+		bool isPicked();
+	};
 
+	class EdgeIterator
+	{
+		typedef const std::pair<long, long> dEdge;
+		SIter _begin;
+		SIter _end;
+		SIter _current;
+		std::function<bool(dEdge&)> qualifier;
+		Frame* frame;
+		long qualifierPointIdA, qualifierPointIdB;
+		long qualifierCoordinateX, qualifierCoordinateY;
+		void initCurrent();
+	public:
+		EdgeIterator(Frame* frame, SIter begin, SIter end, std::function<bool(dEdge&)> qualifier = &allEdgesQualifier);
+		EdgeIterator(Frame* frame, SIter begin, SIter end, long a,long b, std::function<bool(dEdge&)> qualifier = &edgeWithPointsQualifier);
+		EdgeIterator(Frame* frame, SIter begin, SIter end, int x, int y, std::function<bool(dEdge&)> qualifier = &edgeByCoordQualifier);
+		EdgeIterator& setQualifierCoords(int x, int y);
+		EdgeIterator& setQualifierPoints(long a, long b);
+		bool edgeWithPointsQualifier(dEdge& edge);
+		bool edgeByCoordQualifier(dEdge& edge);
+		bool allEdgesQualifier(dEdge& edge);
+		std::pair<long,long> operator*();
+		Frame::SIter operator->();
+		EdgeIterator& operator++();
+		EdgeIterator operator++(int);
+		EdgeIterator& operator--();
+		EdgeIterator operator--(int);
+		EdgeIterator& operator=(const EdgeIterator& value);
+		bool operator==(EdgeIterator& value);
+		EdgeIterator end();
+		EdgeIterator begin();
+		std::pair<std::pair<int, int>, std::pair<int, int>> getPointsCoord();
 	};
 
 };
