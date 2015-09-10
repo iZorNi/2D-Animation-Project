@@ -10,13 +10,14 @@ void Renderer::setSelfPointer(std::weak_ptr<Renderer> weakPtr)
 
 void Renderer::renderFrame()
 {
-	if (!currentFrame.expired())
+	if (!manager.expired())
 	{
+		std::shared_ptr<Frame> renderedFrame = manager.lock()->getCurrentFrame().lock();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		renderBackground();
-		renderPoints();
-		renderEdges();
-		renderFrameNumber();
+		renderPoints(renderedFrame);
+		renderEdges(renderedFrame);
+		renderFrameNumber(renderedFrame);
 		glutSwapBuffers();
 	}
 }
@@ -55,6 +56,7 @@ bool Renderer::renderPoints(Frame::PointIterator point)
 	return checkError();
 
 }
+
 bool Renderer::renderEdges(Frame::EdgeIterator edge)
 {
 	glLineWidth(LINE_WIDTH);
@@ -78,20 +80,15 @@ static void sRenderFrame()
 	}
 }
 
-void Renderer::setCurrentFrame(std::weak_ptr<Frame> frame)
-{
-	currentFrame = frame;
-}
-
-bool Renderer::renderPoints()
+bool Renderer::renderPoints(std::shared_ptr<Frame> renderedFrame)
 {
 	glPointSize(POINT_SIZE);
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glBegin(GL_POINTS);
-	std::pair<long, std::shared_ptr<Point>> point = currentFrame.lock()->resetCurrentPoint();
-	while (point != currentFrame.lock()->failurePoint)
+	std::pair<long, std::shared_ptr<Point>> point = renderedFrame->getFirstPoint();
+	while (point != renderedFrame->failurePoint)
 	{
-		if (currentFrame.lock()->isPickedPoint(point.first))
+		if (renderedFrame->isPickedPoint(point.first))
 		{
 			glColor3f(.0f, 1.0f, 0.0f);
 			placePoint(point.second->getX(), point.second->getY());
@@ -101,7 +98,7 @@ bool Renderer::renderPoints()
 		{
 			placePoint(point.second->getX(), point.second->getY());
 		}
-		point = currentFrame.lock()->getNextPoint();
+		point = renderedFrame->getNextPoint();
 	}
 	glEnd();
 	GLenum error = glGetError();
@@ -115,24 +112,24 @@ void Renderer::placePoint(int x, int y)
 	glVertex2f(x, y);
 }
 
-bool Renderer::renderEdges()
+bool Renderer::renderEdges(std::shared_ptr<Frame> renderedFrame)
 {
 	std::shared_ptr<Point> A, B;
 	glLineWidth(LINE_WIDTH);
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glBegin(GL_LINES);
-	std::pair<long, long> e = currentFrame.lock()->resetCurrentEdge();
-	while (e.first != -1 && e.second != -1)
+	std::pair<long, long> edgeIterator = renderedFrame->getFirstEdge();
+	while ( edgeIterator.first != -1 &&  edgeIterator.second != -1)
 	{
-		std::pair<long, std::shared_ptr<Point>> tmp1 = currentFrame.lock()->getPoint(e.first);
-		std::pair<long, std::shared_ptr<Point>> tmp2 = currentFrame.lock()->getPoint(e.second);
-		if (tmp1 != currentFrame.lock()->failurePoint && tmp2 != currentFrame.lock()->failurePoint)
+		std::pair<long, std::shared_ptr<Point>> tmp1 = renderedFrame->getPoint( edgeIterator.first);
+		std::pair<long, std::shared_ptr<Point>> tmp2 = renderedFrame->getPoint( edgeIterator.second);
+		if (tmp1 != renderedFrame->failurePoint && tmp2 != renderedFrame->failurePoint)
 		{
 			A = tmp1.second;
 			B = tmp2.second;
 			renderEdge(std::make_pair(A->getX(), A->getY()), std::make_pair(B->getX(), B->getY()));
 		}
-		e = currentFrame.lock()->getNextEdge();
+		 edgeIterator = renderedFrame->getNextEdge();
 	}
 	glEnd();
 	return checkError();
@@ -183,14 +180,12 @@ bool Renderer::init(int* argcp, char **argv, int width, int height, std::weak_pt
 
 Renderer::Renderer() :window_width(START_WIDTH), window_height(START_HEIGHT)
 {
-	currentFrame.reset();
 }
 
 Renderer::Renderer(unsigned int width, unsigned int height)
 {
 	window_width = width;
 	window_height = height;
-	currentFrame.reset();
 }
 
 bool Renderer::restoreWindowSize(int width, int height)
@@ -234,11 +229,11 @@ void Renderer::checkSize(int& w, int& h)
 	h = h > glutGet(GLUT_SCREEN_HEIGHT) ? glutGet(GLUT_SCREEN_HEIGHT) : h;
 }
 
-bool Renderer::renderFrameNumber()
+bool Renderer::renderFrameNumber(std::shared_ptr<Frame> renderedFrame)
 {
 	const int size = 25;
 	char s[size];
-	sprintf_s(s, sizeof(s), "%d", currentFrame.lock()->getID()+1);
+	sprintf_s(s, sizeof(s), "%d", renderedFrame->getID()+1);
 	unsigned char str[size];
 	for (int i = 0; i < sizeof(s);++i)
 	{
@@ -256,5 +251,4 @@ bool Renderer::renderFrameNumber()
 
 Renderer::~Renderer()
 {
-	currentFrame.reset();
 }

@@ -6,7 +6,7 @@
 
 enum MenuEntries
 {
-	ADD_POINT, REMOVE_POINT, REMOVE_EDGE
+	ADD_POINT=0, REMOVE_POINT, REMOVE_EDGE
 };
 
 class OpenGLInputManager

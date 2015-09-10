@@ -106,6 +106,15 @@ void FrameController::clear()
 	}
 }
 
+std::weak_ptr<Frame> FrameController::begin()
+{
+	return std::weak_ptr<Frame>(*frames.begin());
+}
+std::weak_ptr<Frame> FrameController::end()
+{
+	return std::weak_ptr<Frame>();
+}
+
 FrameController::FrameIterator::FrameIterator(LIter begin, LIter end, std::function<bool(std::shared_ptr<Frame>)> qualifier)
 	: _begin(begin), _end(end), qualifier(qualifier)
 {
@@ -202,6 +211,19 @@ FrameController::FrameIterator& FrameController::FrameIterator::operator=(const 
 	this->qualifierID = value.qualifierID;
 	this->_current = value._current;
 	return *this;
+}
+bool FrameController::FrameIterator::operator==(FrameIterator& value)
+{
+	if (_current != value._current || _end != value._end
+		|| _begin != value._begin  || qualifierID !=value.qualifierID)
+	{
+		return false;
+	}
+	return true;
+}
+bool FrameController::FrameIterator::operator!=(FrameIterator& value)
+{
+	return !operator==(value);
 }
 const FrameController::FrameIterator FrameController::FrameIterator::end()
 {

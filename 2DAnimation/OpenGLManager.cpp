@@ -18,13 +18,13 @@ void OpenGLManager::handleKeys(unsigned char key, int x, int y)
 {
 	if (key == PREVIOUS_FRAME_KEY_LOWER || key == PREVIOUS_FRAME_KEY_UPPER)
 	{
-		currentFrame = container.getPreviousFrame();
-		renderer->setCurrentFrame(currentFrame);
+		if(!manager.expired())
+			manager.lock()->previousFrame();
 	}
 	else if (key == NEXT_FRAME_KEY_LOWER || key == NEXT_FRAME_KEY_UPPER)
 	{
-		currentFrame = container.getNextFrame();
-		renderer->setCurrentFrame(currentFrame);
+		if (!manager.expired())
+			manager.lock()->nextFrame();
 	}
 	renderer->renderFrame();
 }
@@ -34,7 +34,8 @@ void OpenGLManager::handleMouse(int key, int state, int x, int y)
 
 	if (key == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-		currentFrame.lock()->tryPickPoint(x / POINT_SIZE, y / POINT_SIZE);
+		if (!manager.expired())
+			manager.lock()->pickPoint(x / POINT_SIZE, y / POINT_SIZE);
 		leftPressed = true;
 	}
 	if (key == GLUT_LEFT_BUTTON && state == GLUT_UP)
@@ -48,7 +49,8 @@ void OpenGLManager::handleMouseMotion(int x, int y)
 {
 	if (leftPressed)
 	{
-		currentFrame.lock()->movePoint(x / POINT_SIZE, y / POINT_SIZE);
+		if (!manager.expired())
+			manager.lock()->movePoint(x / POINT_SIZE, y / POINT_SIZE);
 		renderer->renderFrame();
 	}
 }
@@ -63,15 +65,21 @@ void OpenGLManager::render()
 	renderer->renderFrame();
 }
 
-void OpenGLManager::init(int width, int height, int* argcp, char **argv/*, std::weak_ptr<IManager> manager*/)
+std::weak_ptr<Frame> OpenGLManager::getCurrentFrame()
+{
+	if (manager.expired())
+		return std::weak_ptr<Frame>();
+	else
+		return manager.lock()->getCurrentFrame();
+}
+
+void OpenGLManager::init(int width, int height, int* argcp, char **argv, std::weak_ptr<IManager> manager)
 {
 	if (!weakPtrToThis.expired())
 	{
 		leftPressed = false;
 		this->manager = manager;
-		currentFrame = container.getCurrentFrame();
 		renderer->init(argcp, argv, width, height, weakPtrToThis);
-		renderer->setCurrentFrame(currentFrame);
 		input->init(weakPtrToThis);
 	}
 }
@@ -92,17 +100,8 @@ void OpenGLManager::closeFunc()
 
 void OpenGLManager::menuHandler(int val)
 {
-	switch (val) {
-	case ADD_POINT:
-		currentFrame.lock()->addPoint(menuPositionX / POINT_SIZE, menuPositionY / POINT_SIZE);
-		break;
-	case REMOVE_POINT:
-		currentFrame.lock()->removePoint(menuPositionX / POINT_SIZE, menuPositionY / POINT_SIZE);
-		break;
-	case REMOVE_EDGE:
-		currentFrame.lock()->removeEdge(menuPositionX / POINT_SIZE, menuPositionY / POINT_SIZE);
-		break;
-	}
+	if (!manager.expired())
+		manager.lock()->menuCall(val, menuPositionX / POINT_SIZE, menuPositionY / POINT_SIZE);
 	render();
 }
 
@@ -117,8 +116,6 @@ void OpenGLManager::menuStatusHandler(int status, int x, int y)
 
 OpenGLManager::~OpenGLManager()
 {
-	currentFrame.reset();
-	container.clear();
 	renderer.reset();
 	input.reset();
 }

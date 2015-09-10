@@ -1,4 +1,5 @@
 #pragma once
+#include "Frame.h"
 
 class IUserInterfaceManager
 {
@@ -11,6 +12,7 @@ public:
 	virtual void closeFunc()  = 0;
 	virtual void menuHandler(int val)  = 0;
 	virtual void menuStatusHandler(int status, int x, int y)  = 0;
+	virtual std::weak_ptr<Frame> getCurrentFrame() = 0;
 private:
 
 };

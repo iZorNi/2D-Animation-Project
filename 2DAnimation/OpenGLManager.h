@@ -17,20 +17,18 @@ class OpenGLManager:public IUserInterfaceManager
 	static const unsigned char NEXT_FRAME_KEY_UPPER = 'D';
 	static const unsigned char SCREEN_FPS = 60;
 
-	std::weak_ptr<OpenGLManager> weakPtrToThis;
 	int menuPositionX, menuPositionY;
-	FrameController container;
-	std::weak_ptr<Frame> currentFrame;
+	std::weak_ptr<OpenGLManager> weakPtrToThis;
+	
 	std::shared_ptr<Renderer> renderer;
 	std::shared_ptr<OpenGLInputManager> input;
 	std::weak_ptr<IManager> manager;
-	//private methods
 
 public:
 	OpenGLManager();
 	void setSelfPointer(std::weak_ptr<OpenGLManager> weakPtr);
 	virtual ~OpenGLManager();
-	void init(int width, int height, int* argcp, char **argv/*, std::weak_ptr<IManager> manager*/);
+	void init(int width, int height, int* argcp, char **argv, std::weak_ptr<IManager> manager);
 	void run();
 	bool leftPressed;
 	virtual void handleKeys(unsigned char key, int x, int y);
@@ -38,10 +36,9 @@ public:
 	virtual void handleMouseMotion(int x, int y);
 	virtual void reshapeHandler(int width, int height);
 	void render();
-	//static void runMainLoop(int val);
+	virtual std::weak_ptr<Frame> getCurrentFrame();
 	virtual void closeFunc();
 	virtual void menuHandler(int val);
-	//void createMenu();
 	virtual void menuStatusHandler(int status, int x, int y);
 };
 

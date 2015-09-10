@@ -87,7 +87,7 @@ Frame::MIter Frame::getPointByCoord(int x, int y)
 long int Frame::addPoint(uint x, uint y)
 {
 	int res = -1;
-	if(!tryPickPoint(x,y) && !tryPickEdge(x,y))
+	if(!tryPickPoint(x,y))
 		res =addPoint(point_next_id, x, y);
 	return res;
 }
@@ -244,62 +244,80 @@ void Frame::removeEdgeByPoints(long int a, long int b)
 	edges.erase(tmp);
 }
 
-std::unique_ptr<Frame::Diff> Frame::getDiff(std::weak_ptr<Frame> const frame)
+std::unique_ptr<Frame::Diff> Frame::getDifference(std::weak_ptr<Frame> const frame)
 {
-	std::unique_ptr<Diff> res;
-	res->id = this->id;
-	MIter pit = this->points.begin();
-	MIter_const fpit;
-	while (pit != this->points.end())
+	if (frame.expired())
 	{
-		fpit = frame.lock()->points.find(pit->first);
-		if (fpit == frame.lock()->points.end())
+		return nullptr;
+	}
+	std::shared_ptr<Frame> inputFrame = frame.lock();
+	Diff* tmp = new Diff();
+	std::unique_ptr<Diff> result = std::unique_ptr<Diff>(tmp);
+	result->id = this->id;
+	
+	getDifferenceBetweenPoints(inputFrame, result);
+
+	getDifferenceBetweenEdges(inputFrame, result);
+
+	return result;
+}
+
+void Frame::getDifferenceBetweenPoints(std::shared_ptr<Frame> const inputFrame, std::unique_ptr<Frame::Diff>& result)
+{
+	MIter thisFramePointIterator = this->points.begin();
+	MIter_const inputFramePointIterator;
+	while (thisFramePointIterator != this->points.end())
+	{
+		inputFramePointIterator = inputFrame->points.find(thisFramePointIterator->first);
+		if (inputFramePointIterator == inputFrame->points.end())
 		{
-			res->points.insert(std::make_pair(pit->first, std::make_pair(pit->second, res->ADDED)));
+			result->points.insert(std::make_pair(thisFramePointIterator->first, std::make_pair(thisFramePointIterator->second, result->ADDED)));
 		}
 		else
 		{
-			if (fpit->second->getX() != pit->second->getX() || fpit->second->getY() != pit->second->getY())
+			if (inputFramePointIterator->second->getX() != thisFramePointIterator->second->getX() || inputFramePointIterator->second->getY() != thisFramePointIterator->second->getY())
 			{
-				res->points.insert(std::make_pair(pit->first, std::make_pair(pit->second, res->MOVED)));
+				result->points.insert(std::make_pair(thisFramePointIterator->first, std::make_pair(thisFramePointIterator->second, result->MOVED)));
 			}
 		}
-		++pit;
+		++thisFramePointIterator;
 	}
 
-	fpit = frame.lock()->points.begin();
-	while (fpit!=frame.lock()->points.end())
+	inputFramePointIterator = inputFrame->points.begin();
+	while (inputFramePointIterator != inputFrame->points.end())
 	{
-		pit = this->points.find(fpit->first);
-		if (pit == this->points.end())
+		thisFramePointIterator = this->points.find(inputFramePointIterator->first);
+		if (thisFramePointIterator == this->points.end())
 		{
-			res->points.insert(std::make_pair(fpit->first, std::make_pair(fpit->second, res->REMOVED)));
+			result->points.insert(std::make_pair(inputFramePointIterator->first, std::make_pair(inputFramePointIterator->second, result->REMOVED)));
 		}
-		++fpit;
+		++inputFramePointIterator;
 	}
+}
 
-	SIter eit = this->edges.begin();
-	SIter_const feit;
-	while (eit != this->edges.end())
+void Frame::getDifferenceBetweenEdges(std::shared_ptr<Frame> const inputFrame, std::unique_ptr<Frame::Diff>& result)
+{
+	SIter thisFrameEdgeIterator = this->edges.begin();
+	SIter_const inputFrameEdgeIterator;
+	while (thisFrameEdgeIterator != this->edges.end())
 	{
-		feit = frame.lock()->edges.find(*eit);
-		if (feit == frame.lock()->edges.end())
+		inputFrameEdgeIterator = inputFrame->edges.find(*thisFrameEdgeIterator);
+		if (inputFrameEdgeIterator == inputFrame->edges.end())
 		{
-			res->edges.insert(std::make_pair(*eit,res->ADDED));
+			result->edges.insert(std::make_pair(*thisFrameEdgeIterator, result->ADDED));
 		}
-		++eit;
+		++thisFrameEdgeIterator;
 	}
-	feit = frame.lock()->edges.begin();
-	while (feit != this->edges.end())
+	inputFrameEdgeIterator = inputFrame->edges.begin();
+	while (inputFrameEdgeIterator != inputFrame->edges.end())
 	{
-		eit = this->edges.find(*feit);
-		if (eit == this->edges.end())
+		thisFrameEdgeIterator = this->edges.find(*inputFrameEdgeIterator);
+		if (thisFrameEdgeIterator == this->edges.end())
 		{
-			res->edges.insert(std::make_pair(*feit, res->REMOVED));
+			result->edges.insert(std::make_pair(*inputFrameEdgeIterator, result->REMOVED));
 		}
-		++feit;
+		++inputFrameEdgeIterator;
 	}
-	return res;
 }
 
 bool Frame::tryPickPoint(long int id)
@@ -318,11 +336,6 @@ int Frame::getNumberOfEdges()
 	return edges.size();
 }
 
-bool Frame::isPickedPoint(long int id)
-{
-	return ((pickedPoint != points.end()) && (pickedPoint->first == id));
-}
-
 std::pair<long, std::shared_ptr<Point>> Frame::getNextPoint()
 {
 	std::pair<long, std::shared_ptr<Point>> res; 
@@ -338,7 +351,7 @@ std::pair<long, std::shared_ptr<Point>> Frame::getNextPoint()
 	return res;
 }
 
-std::pair<long, std::shared_ptr<Point>> Frame::resetCurrentPoint()
+std::pair<long, std::shared_ptr<Point>> Frame::getFirstPoint()
 {
 	currentPoint = points.begin();
 	return getNextPoint();
@@ -360,7 +373,7 @@ std::pair<long, std::shared_ptr<Point>> Frame::getPoint(long id)
 	return res;
 }
 
-std::pair<long, long> Frame::resetCurrentEdge()
+std::pair<long, long> Frame::getFirstEdge()
 {
 	currentEdge = edges.begin();
 	return getNextEdge();
@@ -381,38 +394,122 @@ std::pair<long, long> Frame::getNextEdge()
 	return res;
 }
 
+bool Frame::isPickedPoint(long int id)
+{
+	if (pickedPoint == points.end())
+		return false;
+	return id == pickedPoint->first;
+}
+
+//Frame::PointIterator Frame::getPointIterator(std::function<bool(std::pair<const long, std::shared_ptr<Point>>&)> qualifier)
+//{
+//	if (qualifier == nullptr)
+//		return Frame::PointIterator(this, points.begin(), points.end());
+//	else
+//		return Frame::PointIterator(this, points.begin(), points.end(), qualifier);
+//}
+//Frame::PointIterator Frame::getPointIterator(long int id, std::function<bool(std::pair<const long, std::shared_ptr<Point>>&)> qualifier)
+//{
+//	if (qualifier == nullptr)
+//		return Frame::PointIterator(this, points.begin(), points.end(),id);
+//	else
+//		return Frame::PointIterator(this, points.begin(), points.end(), id, qualifier);
+//}
+//Frame::PointIterator Frame::getPointIterator(int x, int y, std::function<bool(std::pair<const long, std::shared_ptr<Point>>&)> qualifier)
+//{
+//	if (qualifier == nullptr)
+//		return Frame::PointIterator(this, points.begin(), points.end(), x, y);
+//	else
+//		return Frame::PointIterator(this, points.begin(), points.end(), x, y, qualifier);
+//}
+//
+//Frame::EdgeIterator Frame::getEdgeIterator(std::function<bool(std::pair<long, long>&)> qualifier)
+//{
+//	if (qualifier == nullptr)
+//		return Frame::EdgeIterator(this, edges.begin(), edges.end());
+//	else
+//		return Frame::EdgeIterator(this, edges.begin(), edges.end(), qualifier);
+//}
+//Frame::EdgeIterator Frame::getEdgeIterator(long int a, long int b, std::function<bool(std::pair<long, long>&)> qualifier)
+//{
+//	if (qualifier == nullptr)
+//		return Frame::EdgeIterator(this, edges.begin(), edges.end(), a, b);
+//	else
+//		return Frame::EdgeIterator(this, edges.begin(), edges.end(), a, b, qualifier);
+//}
+//Frame::EdgeIterator Frame::getEdgeIterator(int x, int y, std::function<bool(std::pair<long, long>&)> qualifier)
+//{
+//	if (qualifier == nullptr)
+//		return Frame::EdgeIterator(this, edges.begin(), edges.end(), x, y);
+//	else
+//		return Frame::EdgeIterator(this, edges.begin(), edges.end(), x, y, qualifier);
+//}
+
+void Frame::removeEdge(EdgeIterator edgeIter)
+{
+	auto iter = edges.find(*edgeIter);
+	if (iter != edges.end())
+	{
+		edges.erase(iter);
+	}
+}
+void Frame::removePoint(PointIterator pointIter)
+{
+	auto iter = points.find(pointIter.getId());
+	if(iter != points.end())
+		points.erase(iter);
+}
+bool Frame::tryPickPoint(PointIterator pointIter)
+{
+	auto iter = points.find(pointIter.getId());
+	pickedPoint = iter;
+	return pickedPoint != points.end();
+}
+
 bool Frame::PointIterator::allPointsQualifier(dPoint& point)
 {
 	return true;
 }
 
-bool Frame::PointIterator::pointWithCoordQualifier(dPoint& point)
-{
-	return (point.second->getX() == qualifierCoordinateX && point.second->getY() == qualifierCoordinateY);
-}
+//bool Frame::PointIterator::pointWithCoordQualifier(dPoint& point)
+//{
+//	return (point.second->getX() == qualifierCoordinateX && point.second->getY() == qualifierCoordinateY);
+//}
+//
+//bool Frame::PointIterator::pointWithIdQualifier(dPoint& point)
+//{
+//	return point.first == qualifierID;
+//}
 
-bool Frame::PointIterator::pointWithIdQualifier(dPoint& point)
-{
-	return point.first == qualifierID;
-}
-
-Frame::PointIterator::PointIterator(Frame* frame, MIter begin, MIter end, std::function<bool(dPoint&)> qualifier):
-	_begin(begin), _end(end), qualifier(qualifier), frame(frame)
-{
-	initCurrent();
-}
-
-Frame::PointIterator::PointIterator(Frame* frame, MIter begin, MIter end, long id, std::function<bool(dPoint&)> qualifier) :
-	_begin(begin), _end(end), frame(frame), qualifierID(id), qualifier(qualifier)
-{
-	initCurrent();
-}
-
-Frame::PointIterator::PointIterator(Frame* frame, MIter begin, MIter end, int x, int y, std::function<bool(dPoint&)> qualifier) :
-	_begin(begin), _end(end), frame(frame), qualifierCoordinateX(x), qualifierCoordinateY(y), qualifier(qualifier)
-{
-	initCurrent();
-}
+//Frame::PointIterator::PointIterator(Frame* frame, MIter begin, MIter end, std::function<bool(dPoint&)> qualifier):
+//	_begin(begin), _end(end), frame(frame)
+//{
+//	if (qualifier == nullptr)
+//	{
+//		qualifier = allPointsQualifier;
+//	}
+//	initCurrent();
+//}
+//
+//Frame::PointIterator::PointIterator(Frame* frame, MIter begin, MIter end, long id, std::function<bool(dPoint&)> qualifier) :
+//	_begin(begin), _end(end), frame(frame), qualifierID(id)
+//{
+//	if (qualifier == nullptr)
+//	{
+//		qualifier = pointWithIdQualifier;
+//	}
+//	initCurrent();
+//}
+//
+//Frame::PointIterator::PointIterator(Frame* frame, MIter begin, MIter end, int x, int y, std::function<bool(dPoint&)> qualifier) :
+//	_begin(begin), _end(end), frame(frame), qualifierCoordinateX(x), qualifierCoordinateY(y)
+//{
+//	if (qualifier == nullptr)
+//	{
+//		qualifier = pointWithCoordQualifier;
+//	}
+//	initCurrent();
+//}
 
 Frame::PointIterator::PointIterator(const PointIterator& value)
 {
@@ -541,6 +638,11 @@ bool Frame::PointIterator::operator==(Frame::PointIterator& value)
 	return true;
 }
 
+bool Frame::PointIterator::operator!=(Frame::PointIterator& value)
+{
+	return !operator==(value);
+}
+
 Frame::PointIterator Frame::PointIterator::end()
 {
 	auto tmp = *this;
@@ -557,7 +659,12 @@ Frame::PointIterator Frame::PointIterator::begin()
 
 bool Frame::PointIterator::isPicked()
 {
-	return frame->pickedPoint == _current;
+	return frame->pickedPoint->first == _current->first;
+}
+
+long Frame::PointIterator::getId()
+{
+	return _current->first;
 }
 
 std::shared_ptr<Point> Frame::PointIterator::operator->()
@@ -723,6 +830,11 @@ bool Frame::EdgeIterator::operator==(Frame::EdgeIterator& value)
 		return false;
 	}
 	return true;
+}
+
+bool Frame::EdgeIterator::operator!=(Frame::EdgeIterator& value)
+{
+	return !operator==(value);
 }
 
 Frame::EdgeIterator& Frame::EdgeIterator::operator=(const EdgeIterator& value)

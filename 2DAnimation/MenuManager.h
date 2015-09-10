@@ -1,13 +1,14 @@
 #pragma once
 #include "IManager.h"
 
-enum MenuEntries
-{
-	ADD_POINT, REMOVE_POINT, REMOVE_EDGE
-};
+
 
 class MenuManager
 {
+	enum MenuEntries
+	{
+		ADD_POINT=0, REMOVE_POINT, REMOVE_EDGE
+	};
 	std::weak_ptr<IManager> manager;
 public:
 	MenuManager();

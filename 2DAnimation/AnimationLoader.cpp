@@ -17,92 +17,98 @@ void AnimationLoader::setPath(std::string path)
 
 bool AnimationLoader::loadAnimation(std::weak_ptr<IFrameController> container)
 {
-	bool res = fm.openFileForReading(path);
-	if (res)
+	FileManager reader;
+	if (!reader.openFileForReading(path))
 	{
-		int size;
-		res = fm.readFromFile<int>(size);
-		if (!res)
+		return false;
+	}
+	int size;
+	if (!reader.readFromFile<int>(size))
+	{
+		return false;
+	}
+	if (container.expired())
+	{
+		return false;
+	}
+	std::shared_ptr<IFrameController> currentContainer = container.lock();
+	container.lock()->clear();
+	std::shared_ptr<Frame> currentFrame = currentContainer->addEmptyFrame().lock();
+	readFrame(currentFrame, reader);
+	if (currentFrame == nullptr)
+	{
+		currentContainer->clear();
+		return false;
+	}
+	for (int i = 1;i < size;++i)
+	{
+		currentFrame = currentContainer->addFrame().lock();
+		readFrame(currentFrame,reader);
+		if (currentFrame == nullptr)
 		{
-			fm.closeInputFile();
-			return res;
-		}
-		container.lock()->clear();
-		readFrame(container.lock()->addEmptyFrame().lock());
-		if (container.lock()->getCurrentFrame().lock() == nullptr)
-		{
-			container.lock()->clear();
-			fm.closeInputFile();
-			res = false;
-		}
-		else
-		{
-			for (int i = 1;i < size;++i)
-			{
-				readFrame(container.lock()->addFrame().lock());
-				if (container.lock()->getCurrentFrame().lock() == nullptr)
-				{
-					container.lock()->clear();
-					fm.closeInputFile();
-					res = false;
-					break;
-				}
-			}
+			currentContainer->clear();
+			return false;
 		}
 	}
-	fm.closeInputFile();
-	return res;
+	return true;
 }
 
-std::shared_ptr<Frame> AnimationLoader::readFrame(std::shared_ptr<Frame> frame)
+std::shared_ptr<Frame> AnimationLoader::readFrame(std::shared_ptr<Frame> frame, FileManager& reader)
 {
 	unsigned int id;
-	fm.readFromFile<unsigned int>(id);
+	reader.readFromFile<unsigned int>(id);
 	frame->setID(id);
-	if (loadPoints(frame))
+	if (loadPoints(frame, reader))
 	{
-		loadEdges(frame);
+		loadEdges(frame, reader);
 	}
 	return frame;
 }
 
-AnimationLoader::dPoint AnimationLoader::readPoint()
+AnimationLoader::dPoint AnimationLoader::readPoint(FileManager& reader)
 {
-	bool success;
 	long resID = -1;
 	std::shared_ptr<Point> resPoint = nullptr;
 	dPoint res = std::make_pair(resID , std::make_pair( resPoint, Frame::Diff::REMOVED));
-	success = fm.readFromFile<long int>(resID);
-	if (!success) return res;
+	if (!reader.readFromFile<long int>(resID))
+	{
+		return res;
+	}
 	int x, y;
-	success = fm.readFromFile<int>(x);
-	if (!success) return res;
-	success = fm.readFromFile<int>(y);
-	if (!success) return res;
+	if (!reader.readFromFile<int>(x))
+	{
+		return res;
+	}
+	if (!reader.readFromFile<int>(y))
+	{
+		return res;
+	}
 	resPoint = std::make_shared<Point>(x, y);
 	Frame::Diff::status resSt;
-	success = fm.readFromFile<Frame::Diff::status>(resSt);
-	if (!success) return res;
+	if (!reader.readFromFile<Frame::Diff::status>(resSt))
+	{
+		return res;
+	}
 	res.first = resID;
 	res.second.first = resPoint;
 	res.second.second = resSt;
 	return res;
 }
 
-bool AnimationLoader::loadPoints(std::shared_ptr<Frame> frame)
+bool AnimationLoader::loadPoints(std::shared_ptr<Frame> frame, FileManager& reader)
 {
 	int size;
-	if (!fm.readFromFile(size))
-		frame = nullptr;
-	else
+	if (!reader.readFromFile(size))
 	{
-		for (int i = 0; i < size;++i)
+		frame = nullptr;
+		return false;
+	}
+	for (int i = 0; i < size;++i)
+	{
+		if (!loadPoint(frame, readPoint(reader)))
 		{
-			if (!loadPoint(frame, readPoint()))
-			{
-				frame = nullptr;
-				break;
-			}
+			frame = nullptr;
+			break;
 		}
 	}
 	return frame != nullptr;
@@ -133,38 +139,43 @@ bool AnimationLoader::loadPoint(std::shared_ptr<Frame> frame, AnimationLoader::d
 	return res;
 }
 
-AnimationLoader::dEdge AnimationLoader::readEdge()
+AnimationLoader::dEdge AnimationLoader::readEdge(FileManager& reader)
 {
-	bool success;
 	dEdge res = std::make_pair(std::make_pair(-1, -1), Frame::Diff::REMOVED);
 	long int a, b;
-	success = fm.readFromFile<long int>(a);
-	if (!success) return res;
-	success = fm.readFromFile<long int>(b);
-	if (!success) return res;
+	if (!reader.readFromFile<long int>(a))
+	{
+		return res;
+	}
+	if (!reader.readFromFile<long int>(b))
+	{
+		return res;
+	}
 	Frame::Diff::status st;
-	success = fm.readFromFile<Frame::Diff::status>(st);
-	if (!success) return res;
+	if (!reader.readFromFile<Frame::Diff::status>(st))
+	{
+		return res;
+	}
 	res.first.first = a;
 	res.first.second = b;
 	res.second = st;
 	return res;
 }
 
-bool AnimationLoader::loadEdges(std::shared_ptr<Frame> frame)
+bool AnimationLoader::loadEdges(std::shared_ptr<Frame> frame, FileManager& reader)
 {
 	int size;
-	if (!fm.readFromFile(size))
-		frame = nullptr;
-	else
+	if (!reader.readFromFile(size))
 	{
-		for (int i = 0; i < size;++i)
+		frame = nullptr;
+		return false;
+	}
+	for (int i = 0; i < size;++i)
+	{
+		if (!loadEdge(frame, readEdge(reader)))
 		{
-			if (!loadEdge(frame, readEdge()))
-			{
-				frame = nullptr;
-				break;
-			}
+			frame = nullptr;
+			break;
 		}
 	}
 	return frame != nullptr;

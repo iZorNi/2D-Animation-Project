@@ -16,40 +16,47 @@ AnimationSaver::AnimationSaver(std::string path) :path(path)
 
 bool AnimationSaver::saveAnimation(std::weak_ptr<IFrameController> container)
 {
-	bool res = path.length() != 0;
-	if (res)
+	if (!path.length() != 0)
 	{
-		res = fm.openFileForWriting(path);
-		if (res)
-		{
-			if (fm.writeToFile<int>(container.lock()->totalNumberOfFrames()))
-			{
-				std::weak_ptr<Frame> f = container.lock()->getFirstFrame();
-				res = saveDifference(f.lock()->getDiff(std::weak_ptr<Frame>(std::make_shared<Frame>(container.lock()->totalNumberOfFrames()))));
-				if (!res)
-				{
-					fm.closeOutputFile();
-					return res;
-				}
-				while (f.lock() != (container.lock()->getLastFrame().lock()))
-				{
-					std::unique_ptr<Frame::Diff> diff = container.lock()->getNextFrame().lock()->getDiff(f);
-					if (!saveDifference(diff))
-					{	
-						res = false;
-						break;
-					}
-					f = container.lock()->getCurrentFrame();
-				}
-			}
-			else
-			{
-				res = false;
-			}
-			fm.closeOutputFile();
-		}
+		return false;
 	}
-	return res;
+	FileManager writer;
+	if (!writer.openFileForWriting(path))
+	{
+		return false;
+	}
+	std::shared_ptr<IFrameController> currentContainer;
+	if(container.expired())
+	{
+		return false;
+	}
+	currentContainer = container.lock();
+	if (!writer.writeToFile<int>(currentContainer->totalNumberOfFrames()))
+	{
+		return false;
+	}
+	//Fake-zero frame for algorithnm to be more consistent
+	int total = currentContainer->totalNumberOfFrames();
+	std::shared_ptr<Frame> fakeZeroShared = std::make_shared<Frame>(total);
+	std::weak_ptr<Frame>fakezero = std::weak_ptr<Frame>(fakeZeroShared);
+	std::weak_ptr<Frame> currentFrame = currentContainer->getFirstFrame();
+	if(!saveDifference(currentFrame.lock()->getDifference(fakezero), writer))
+	{
+		return false;
+	}
+	fakeZeroShared.reset();
+	for (int i = 1; i < total; ++i)
+	{
+		auto tmpFrame = currentContainer->getNextFrame().lock();
+		std::unique_ptr<Frame::Diff> diff = tmpFrame->getDifference(currentFrame);
+		if (!saveDifference(diff, writer))
+		{	
+			return false;
+		}
+		currentFrame = currentContainer->getCurrentFrame();
+	}
+	writer.closeOutputFile();
+	return true;
 }
 
 void AnimationSaver::setPath(std::string path)
@@ -57,150 +64,135 @@ void AnimationSaver::setPath(std::string path)
 	this->path = path;
 }
 
-bool AnimationSaver::saveFrame(std::shared_ptr<Frame> frame)
+bool AnimationSaver::saveFrame(std::shared_ptr<Frame> frame, FileManager& writer)
 {
 	bool res;
-	res = saveFrameID(frame->getID());
+	res = saveFrameID(frame->getID(),writer);
 	if (res)
 	{
-		res = savePoints(frame);
+		res = savePoints(frame, writer);
 	}
 	if (res)
 	{
-		res = saveEdges(frame);
+		res = saveEdges(frame, writer);
 	}
 	return res;
 }
 
-bool AnimationSaver::saveFrameID(unsigned int id)
+bool AnimationSaver::saveFrameID(unsigned int id, FileManager& writer)
 {
-	return fm.writeToFile<unsigned int>(id);
+	return writer.writeToFile<unsigned int>(id);
 }
 
-bool AnimationSaver::savePoints(std::shared_ptr<Frame> frame)
+bool AnimationSaver::savePoints(std::shared_ptr<Frame> frame, FileManager& writer)
 {
-	bool result = true;
-	if (fm.writeToFile<int>(frame->getNumberOfPoints()))
+	if (!writer.writeToFile<int>(frame->getNumberOfPoints()))
 	{
-		std::pair<long int, std::shared_ptr<Point>> p = frame->resetCurrentPoint();
-		while (p != frame->failurePoint)
+		return false;
+	}
+	std::pair<long int, std::shared_ptr<Point>> p = frame->getFirstPoint();
+	while (p != frame->failurePoint)
+	{
+		if (!savePoint(p.first, p.second->getX(), p.second->getY(), Frame::Diff::ADDED, writer))
 		{
-			if (!savePoint(p.first, p.second->getX(), p.second->getY(), Frame::Diff::ADDED))
-			{
-				result = false;
-				break;
-			}
-			p = frame->getNextPoint();
+			return false;
 		}
+		p = frame->getNextPoint();
 	}
-	else
-	{
-		result = false;
-	}
-	return result;
+	return true;
 }
 
-bool AnimationSaver::saveEdges(std::shared_ptr<Frame> frame)
+bool AnimationSaver::saveEdges(std::shared_ptr<Frame> frame, FileManager& writer)
 {
-	bool result;
-	result = fm.writeToFile<unsigned int>(frame->getNumberOfEdges());
-	if (result)
+	if (!writer.writeToFile<unsigned int>(frame->getNumberOfEdges()))
 	{
-		std::pair<long int, long int> e = frame->resetCurrentEdge();
-		while (e.first != -1 && e.second != -1)
-		{
-			result = saveEdge(e.first, e.second, Frame::Diff::ADDED);
-			if (!result)
-				break;
-			e = frame->getNextEdge();
-		}
+		return false;
 	}
-	return result;
+	std::pair<long int, long int> edgeIter = frame->getFirstEdge();
+	while (edgeIter.first != -1 && edgeIter.second != -1)
+	{
+		if (!saveEdge(edgeIter.first, edgeIter.second, Frame::Diff::ADDED,writer))
+			return false;
+		edgeIter = frame->getNextEdge();
+	}
+	return true;
 }
 
-bool AnimationSaver::saveDifference(std::unique_ptr<Frame::Diff>& diff)
+bool AnimationSaver::saveDifference(std::unique_ptr<Frame::Diff>& diff, FileManager& writer)
 {
 	bool res;
-	res = fm.writeToFile<unsigned int>(diff->id);
+	res = writer.writeToFile<unsigned int>(diff->id);
 	//points
 	if (res)
 	{
-		res = saveDifferencePoints(diff);
+		res = saveDifferencePoints(diff, writer);
 	}
 	//edges
 	if (res)
 	{
-		res = saveDifferenceEdges(diff);
+		res = saveDifferenceEdges(diff, writer);
 	}
 	return res;
 }
 
-bool AnimationSaver::saveDifferencePoints(std::unique_ptr<Frame::Diff>& diff)
+bool AnimationSaver::saveDifferencePoints(std::unique_ptr<Frame::Diff>& diff, FileManager& writer)
 {
-	bool result = true;
-	if (fm.writeToFile<unsigned int>(diff->points.size()))
+	if (!writer.writeToFile<unsigned int>(diff->points.size()))
 	{
-		std::map<long int, std::pair<std::shared_ptr<Point>, Frame::Diff::status>>::iterator pit = diff->points.begin();
-		while (pit != diff->points.end())
+		return false;
+	}
+	std::map<long int, std::pair<std::shared_ptr<Point>, Frame::Diff::status>>::iterator pointIterator = diff->points.begin();
+	while (pointIterator != diff->points.end())
+	{
+		if (!savePoint(pointIterator->first, pointIterator->second.first->getX(), pointIterator->second.first->getY(), pointIterator->second.second, writer))
 		{
-			if (!savePoint(pit->first, pit->second.first->getX(), pit->second.first->getY(), pit->second.second))
-			{
-				result = false;
-				break;
-			}
+			return false;
 		}
+		++pointIterator;
 	}
-	else
-	{
-		result = false;
-	}
-	return result;
+	return true;
 }
 
-bool AnimationSaver::saveDifferenceEdges(std::unique_ptr<Frame::Diff>& diff)
+bool AnimationSaver::saveDifferenceEdges(std::unique_ptr<Frame::Diff>& diff, FileManager& writer)
 {
-	bool result = true;
-	if (fm.writeToFile<unsigned int>(diff->edges.size()))
+	if (!writer.writeToFile<unsigned int>(diff->edges.size()))
 	{
-		std::set<std::pair<std::pair<long int, long int>, Frame::Diff::status>>::iterator eit = diff->edges.begin();
-		while (eit != diff->edges.end())
+		return false;
+	}
+	std::set<std::pair<std::pair<long int, long int>, Frame::Diff::status>>::iterator edgeIter = diff->edges.begin();
+	while (edgeIter != diff->edges.end())
+	{
+		if (!saveEdge(edgeIter->first.first, edgeIter->first.second, edgeIter->second,writer))
 		{
-			if (!saveEdge(eit->first.first, eit->first.second, eit->second))
-			{
-				result = false;
-				break;
-			}
+			return false;
 		}
+		++edgeIter;
 	}
-	else
-	{
-		result = false;
-	}
-	return result;
+	return true;
 }
 
-bool AnimationSaver::savePoint(long int id, int x, int y, Frame::Diff::status status)
+bool AnimationSaver::savePoint(long int id, int x, int y, Frame::Diff::status status, FileManager& writer)
 {
 	bool res;
-	res = fm.writeToFile<long int>(id);
+	res = writer.writeToFile<long int>(id);
 	if (!res) return res;
-	res = fm.writeToFile<int>(x);
+	res = writer.writeToFile<int>(x);
 	if (!res) return res;
-	res = fm.writeToFile<int>(y);
+	res = writer.writeToFile<int>(y);
 	if (!res) return res;
-	res = fm.writeToFile<Frame::Diff::status>(status);
+	res = writer.writeToFile<Frame::Diff::status>(status);
 	if (!res) return res;
 	return res;
 }
 
-bool AnimationSaver::saveEdge(long int a, long int b, Frame::Diff::status status)
+bool AnimationSaver::saveEdge(long int a, long int b, Frame::Diff::status status, FileManager& writer)
 {
 	bool res;
-	res = fm.writeToFile<long int>(a);
+	res = writer.writeToFile<long int>(a);
 	if (!res) return res;
-	res = fm.writeToFile<long int>(b);
+	res = writer.writeToFile<long int>(b);
 	if (!res) return res;
-	res = fm.writeToFile<Frame::Diff::status>(status);
+	res = writer.writeToFile<Frame::Diff::status>(status);
 	if (!res) return res;
 	return res;
 }

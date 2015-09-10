@@ -18,6 +18,8 @@ public:
 	virtual std::weak_ptr<Frame> addEmptyFrame();
 	virtual std::weak_ptr<Frame> addFrame();
 	virtual std::weak_ptr<Frame> getCurrentFrame();
+	virtual std::weak_ptr<Frame> begin();
+	virtual std::weak_ptr<Frame> end();
 	virtual void addFrame(std::shared_ptr<Frame> frame);
 	virtual int totalNumberOfFrames();
 	virtual void clear();
@@ -43,8 +45,10 @@ public:
 		FrameIterator operator++(int);
 		FrameIterator& operator--();
 		FrameIterator operator--(int);
-		virtual FrameIterator& operator=(const FrameIterator& value);
-		virtual ~FrameIterator() {};
+		FrameIterator& operator=(const FrameIterator& value);
+		bool operator==(FrameIterator& value);
+		bool operator!=(FrameIterator& value);
+		~FrameIterator() {};
 		const FrameIterator end();
 		const FrameIterator begin();
 	};
