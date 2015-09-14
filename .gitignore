@@ -4,3 +4,7 @@ Release//
 *.opensdf
 *.sdf
 *.suo
+*.obj
+*.log
+*.tlog
+*.pdb
