@@ -75,11 +75,17 @@
     <ClInclude Include="AnimationSaver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MyIterator.h">
-      <Filter>Interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="PlainAnimationEditor.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PointsContainer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EdgesContainer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Iterator.h">
+      <Filter>Interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -120,6 +126,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PlainAnimationEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PointsContainer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EdgesContainer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
