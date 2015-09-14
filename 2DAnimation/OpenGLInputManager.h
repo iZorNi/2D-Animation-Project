@@ -13,11 +13,13 @@ enum MenuEntries
 //should be singleton
 class OpenGLInputManager
 {
+	static std::weak_ptr<OpenGLInputManager> instance;
 	std::weak_ptr<IUserInterfaceManager> mainManager;
 	int menu;
-
+	OpenGLInputManager();
 public:
-	void setSelfPointer(std::weak_ptr<OpenGLInputManager> weakPtr);
+	static std::shared_ptr<OpenGLInputManager> getInstance();
+	//void setSelfPointer(std::weak_ptr<OpenGLInputManager> weakPtr);
 	void handleKeys(unsigned char key, int x, int y);
 	void handleMouse(int button, int state, int x, int y);
 	void handleMouseMotion(int x, int y);

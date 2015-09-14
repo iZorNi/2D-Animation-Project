@@ -1,6 +1,5 @@
 #include "Renderer.h"
 
-
 namespace
 {
 	//pointer to this object, yes it's not safe, 
@@ -17,10 +16,12 @@ namespace
 	}
 }
 
-void Renderer::setSelfPointer(std::weak_ptr<Renderer> weakPtr)
-{
-	weakPtrToThis = weakPtr;
-}
+//void Renderer::setSelfPointer(std::weak_ptr<Renderer> weakPtr)
+//{
+//	::weakPtrToThis = weakPtr;
+//}
+
+std::weak_ptr<Renderer> Renderer::instance;
 
 void Renderer::renderFrame()
 {
@@ -29,62 +30,30 @@ void Renderer::renderFrame()
 		std::shared_ptr<Frame> renderedFrame = manager.lock()->getCurrentFrame().lock();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		renderBackground();
-		renderPoints(renderedFrame->pointsBegin(), renderedFrame->getNumberOfPoints(),  renderedFrame);
-		renderEdges(renderedFrame->edgesBegin(), renderedFrame->getNumberOfEdges(), renderedFrame->pointsEnd(), renderedFrame);
+		renderPoints(renderedFrame->pointsBegin(), renderedFrame->getNumberOfPoints(), std::bind(static_cast<bool(Frame::*)(long int)>(&Frame::isPickedPoint), &(*renderedFrame), std::placeholders::_1));
+		renderEdges(renderedFrame->edgesBegin(), renderedFrame->getNumberOfEdges(), renderedFrame->pointsEnd(), std::bind(&Frame::getPoint, &(*renderedFrame), std::placeholders::_1));
 		renderFrameNumber(renderedFrame);
 		glutSwapBuffers();
 	}
 }
 
-//void Renderer::renderFrame(PointsContainer::PointIterator pointsBegin, int pointsSize, long pickedPointID, EdgesContainer::EdgeIterator edge, int edgesSize)
-//{
-//	renderBackground();
-//	renderPoints(point);
-//	renderEdges(edge);
-//	//renderFrameNumber();
-//	glutSwapBuffers();
-//}
-//
-//bool Renderer::renderPoints(PointsContainer::PointIterator pointsBegin, int size, long pickedPointID)
-//{
-//	glPointSize(POINT_SIZE);
-//	glColor3f(1.0f, 0.0f, 0.0f);
-//	glBegin(GL_POINTS);
-//	auto pointIterator = pointsBegin;
-//	for (int i = 0; i < size; ++i , ++pointIterator)
-//	{
-//		if (pointIterator.getId() == pickedPointID)
-//		{
-//			glColor3f(.0f, 1.0f, 0.0f);
-//			placePoint(pointIterator->getX(), pointIterator->getY());
-//			glColor3f(1.0f, 0.0f, 0.0f);
-//		}
-//		else
-//		{
-//			placePoint(pointIterator->getX(), pointIterator->getY());
-//		}
-//	}
-//	glEnd();
-//	GLenum error = glGetError();
-//	return checkError();
-//
-//}
-//
-//bool Renderer::renderEdges(EdgesContainer::EdgeIterator edgesBegin, int size)
-//{
-//	glLineWidth(LINE_WIDTH);
-//	glColor3f(0.0f, 0.0f, 0.0f);
-//	glBegin(GL_LINES);
-//	auto edgeIterator  = edgesBegin;
-//	for (int i = 0; i < size; ++i , ++edgeIterator)
-//	{
-//		renderEdge(edge.getPointsCoord().first, edge.getPointsCoord().second);
-//	}
-//	glEnd();
-//	return checkError();
-//}
+std::shared_ptr<Renderer> Renderer::getInstance()
+{
+	if (Renderer::instance.expired())
+	{
+		Renderer tmp;
+		std::shared_ptr<Renderer> result = std::make_shared<Renderer>(tmp);
+		Renderer::instance = std::weak_ptr<Renderer>(result);
+		weakPtrToThis = Renderer::instance;
+		return result;
+	}
+	else
+	{
+		return instance.lock();
+	}
+}
 
-bool Renderer::renderPoints(PointsContainer::PointIterator pointsBegin, int size, std::shared_ptr<Frame> renderedFrame)
+bool Renderer::renderPoints(PointsContainer::PointIterator pointsBegin, int size, std::function<bool(long)> isPickedPoint)
 {
 	glPointSize(POINT_SIZE);
 	glColor3f(1.0f, 0.0f, 0.0f);
@@ -92,7 +61,7 @@ bool Renderer::renderPoints(PointsContainer::PointIterator pointsBegin, int size
 	auto pointIterator = pointsBegin;
 	for (int i = 0; i < size; ++i, ++pointIterator)
 	{
-		if (renderedFrame->isPickedPoint(pointIterator.getId()))
+		if (isPickedPoint(pointIterator.getId()))
 		{
 			glColor3f(.0f, 1.0f, 0.0f);
 			placePoint(pointIterator->getX(), pointIterator->getY());
@@ -115,7 +84,7 @@ void Renderer::placePoint(int x, int y)
 	glVertex2f(x, y);
 }
 
-bool Renderer::renderEdges(EdgesContainer::EdgeIterator edgesBegin, int size, PointsContainer::iterator pointsEnd, std::shared_ptr<Frame> renderedFrame)
+bool Renderer::renderEdges(EdgesContainer::EdgeIterator edgesBegin, int size, PointsContainer::iterator pointsEnd, std::function<PointsContainer::PointIterator(long)> getPoint)
 {
 	PointsContainer::PointIterator A, B;
 	glLineWidth(LINE_WIDTH);
@@ -124,8 +93,8 @@ bool Renderer::renderEdges(EdgesContainer::EdgeIterator edgesBegin, int size, Po
 	auto edgeIterator = edgesBegin;
 	for (int i = 0; i < size; ++i, ++edgeIterator)
 	{
-		A = renderedFrame->getPoint(edgeIterator->first);
-		B = renderedFrame->getPoint(edgeIterator->second);
+		A = getPoint(edgeIterator->first);
+		B = getPoint(edgeIterator->second);
 		if (A != pointsEnd && B != pointsEnd)
 		{
 			renderEdge(std::make_pair(A->getX(), A->getY()), std::make_pair(B->getX(), B->getY()));
@@ -178,14 +147,19 @@ bool Renderer::init(int* argcp, char **argv, int width, int height, std::weak_pt
 	return checkError();
 }
 
-Renderer::Renderer() :window_width(START_WIDTH), window_height(START_HEIGHT)
-{
-}
+Renderer::Renderer()
+	:window_width(START_WIDTH), window_height(START_HEIGHT)
+{}
 
-Renderer::Renderer(unsigned int width, unsigned int height)
+Renderer::Renderer(unsigned int width, unsigned int height):
+	window_width(width), window_height(height)
+{}
+
+Renderer::Renderer(const Renderer& value)
 {
-	window_width = width;
-	window_height = height;
+	this->manager = value.manager;
+	this->window_width = value.window_width;
+	this->window_height = value.window_height;
 }
 
 bool Renderer::restoreWindowSize(int width, int height)

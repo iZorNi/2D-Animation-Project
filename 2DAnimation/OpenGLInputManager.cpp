@@ -58,10 +58,31 @@ namespace
 	}
 }
 //sets weakPtrToThis
-void OpenGLInputManager::setSelfPointer(std::weak_ptr<OpenGLInputManager> weakPtr)
+//void OpenGLInputManager::setSelfPointer(std::weak_ptr<OpenGLInputManager> weakPtr)
+//{
+//	weakPtrToThis = weakPtr;
+//}
+
+std::weak_ptr<OpenGLInputManager> OpenGLInputManager::instance;
+
+std::shared_ptr<OpenGLInputManager> OpenGLInputManager::getInstance()
 {
-	weakPtrToThis = weakPtr;
+	if (instance.expired())
+	{
+		OpenGLInputManager tmp;
+		std::shared_ptr<OpenGLInputManager> result = std::make_shared<OpenGLInputManager>(tmp);
+		OpenGLInputManager::instance = std::weak_ptr<OpenGLInputManager>(result);
+		weakPtrToThis = OpenGLInputManager::instance;
+		return result;
+	}
+	else
+	{
+		return instance.lock();
+	}
 }
+
+OpenGLInputManager::OpenGLInputManager()
+{}
 
 void OpenGLInputManager::handleKeys(unsigned char key, int x, int y)
 {

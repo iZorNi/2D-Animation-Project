@@ -12,7 +12,6 @@ PlainAnimationEditor::~PlainAnimationEditor()
 {
 }
 
-
 bool PlainAnimationEditor::saveAnimation(std::string path)
 {
 	return slave->save(path);
