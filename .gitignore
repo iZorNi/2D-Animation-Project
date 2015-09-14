@@ -1,5 +1,6 @@
 Debug//
-Release//
+2DAnimation/Release//
+2DAnimation/Debug//
 .vs//
 *.opensdf
 *.sdf
@@ -8,3 +9,5 @@ Release//
 *.log
 *.tlog
 *.pdb
+*.iobj
+*.ipdb
