@@ -6,17 +6,18 @@ class EdgesContainer
 public:
 	class EdgeIterator;
 	typedef EdgeIterator iterator;
-	typedef std::set<std::pair<long int, long int>>::iterator SetIterator;
-	typedef std::set<std::pair<long int, long int>>::const_iterator SetIterator_const;
+	typedef std::set<std::pair<long int, long int>>::iterator EdgesSetIterator;
+	typedef std::set<std::pair<long int, long int>>::const_iterator EdgesSetIterator_const;
 private:
 	std::set<std::pair<long int, long int>> edges;
-	iterator createIterator(SetIterator it);
-	void removeEdge(SetIterator it);
-	SetIterator findEdge(int x, int y, std::weak_ptr<PointsContainer> points);
+	iterator createIterator(EdgesSetIterator it);
+	void removeEdge(EdgesSetIterator it);
+	EdgesSetIterator findEdge(int x, int y, std::weak_ptr<PointsContainer> points);
 public:
 	EdgesContainer();
 	~EdgesContainer();
 	iterator addEdge(long int a, long int b);
+	iterator copyEdge(iterator edgeIterator);
 	void removeEdge(long int a, long int b);
 	void removeEdge(int x, int y, std::weak_ptr<PointsContainer> points);
 	void removeEdge(iterator edge);
@@ -32,13 +33,14 @@ class EdgesContainer::EdgeIterator: public Iterator<std::set<std::pair<long int,
 {
 	friend class EdgesContainer;
 protected:
-	EdgeIterator(SetIterator begin, SetIterator end);
-	EdgeIterator(SetIterator begin, SetIterator end, SetIterator current);
+	EdgeIterator(EdgesSetIterator begin, EdgesSetIterator end);
+	EdgeIterator(EdgesSetIterator begin, EdgesSetIterator end, EdgesSetIterator current);
 public:
+	EdgeIterator();
 	virtual ~EdgeIterator();
 	EdgeIterator(const EdgeIterator& value);
 	virtual EdgeIterator& operator=(const EdgeIterator& value);
 	std::pair<long,long> operator*();
-	SetIterator operator->();
+	EdgesSetIterator operator->();
 };
 

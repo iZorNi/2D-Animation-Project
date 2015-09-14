@@ -13,6 +13,7 @@ public:
 	virtual void removeEdge(int x, int y) = 0;
 	virtual void movePoint(int x, int y) = 0;
 	virtual void pickPoint(int x, int y) = 0;
+	virtual void freePickedPoint() = 0;
 	virtual void nextFrame() = 0;
 	virtual void previousFrame() = 0;
 	virtual std::weak_ptr<Frame> getCurrentFrame() = 0;

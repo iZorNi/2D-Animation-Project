@@ -11,7 +11,7 @@ EdgesContainer::~EdgesContainer()
 {
 }
 
-EdgesContainer::iterator EdgesContainer::createIterator(SetIterator it)
+EdgesContainer::iterator EdgesContainer::createIterator(EdgesSetIterator it)
 {
 	return EdgeIterator(edges.begin(), edges.end(), it);
 }
@@ -26,7 +26,7 @@ EdgesContainer::iterator EdgesContainer::end()
 	return createIterator(edges.end());
 }
 
-void EdgesContainer::removeEdge(SetIterator it)
+void EdgesContainer::removeEdge(EdgesSetIterator it)
 {
 	if (it != edges.end())
 	{
@@ -36,13 +36,13 @@ void EdgesContainer::removeEdge(SetIterator it)
 
 void EdgesContainer::removeEdge(long int a, long int b)
 {
-	SetIterator it = edges.find(std::make_pair(a, b));
+	EdgesSetIterator it = edges.find(std::make_pair(a, b));
 	removeEdge(it);
 }
 
 void EdgesContainer::removeEdge(int x, int y, std::weak_ptr<PointsContainer> points)
 {
-	SetIterator it = findEdge(x, y, points);
+	EdgesSetIterator it = findEdge(x, y, points);
 	removeEdge(it);
 }
 
@@ -80,7 +80,7 @@ void EdgesContainer::removeEdgesWithPoint(long int id)
 
 EdgesContainer::iterator EdgesContainer::addEdge(long int a, long int b)
 {
-	SetIterator it = edges.insert(std::make_pair(a, b)).first;
+	EdgesSetIterator it = edges.insert(std::make_pair(a, b)).first;
 	return createIterator(it);
 }
 
@@ -91,7 +91,7 @@ namespace {
 	}
 }
 
-EdgesContainer::SetIterator EdgesContainer::findEdge(int x, int y, std::weak_ptr<PointsContainer> points)
+EdgesContainer::EdgesSetIterator EdgesContainer::findEdge(int x, int y, std::weak_ptr<PointsContainer> points)
 {
 	auto iter = edges.begin();
 	std::shared_ptr<PointsContainer> sPoints = points.lock();
@@ -119,17 +119,18 @@ EdgesContainer::SetIterator EdgesContainer::findEdge(int x, int y, std::weak_ptr
 		}
 		++iter;
 	}
+	return iter;
 }
 
 EdgesContainer::iterator EdgesContainer::getEdge(long int a, long int b)
 {
-	SetIterator it = edges.find(std::make_pair(a,b));
+	EdgesSetIterator it = edges.find(std::make_pair(a,b));
 	return createIterator(it);
 }
 
 EdgesContainer::iterator EdgesContainer::getEdgeByCoord(int x, int y, std::weak_ptr<PointsContainer> points)
 {
-	SetIterator it = findEdge(x, y, points);
+	EdgesSetIterator it = findEdge(x, y, points);
 	return createIterator(it);
 }
 
@@ -142,12 +143,16 @@ int EdgesContainer::size()
 //EdgeIterator
 ////////////////////////////////
 
-EdgesContainer::EdgeIterator::EdgeIterator(SetIterator begin, SetIterator end) :
+EdgesContainer::EdgeIterator::EdgeIterator(EdgesSetIterator begin, EdgesSetIterator end) :
 	Iterator<std::set<std::pair<long int, long int>>>(begin, end, begin)
 {}
 
-EdgesContainer::EdgeIterator::EdgeIterator(SetIterator begin, SetIterator end, SetIterator current) :
+EdgesContainer::EdgeIterator::EdgeIterator(EdgesSetIterator begin, EdgesSetIterator end, EdgesSetIterator current) :
 	Iterator<std::set<std::pair<long int, long int>>>(begin, end, current)
+{}
+
+EdgesContainer::EdgeIterator::EdgeIterator() :
+	Iterator<std::set<std::pair<long int, long int>>>()
 {}
 
 EdgesContainer::EdgeIterator::EdgeIterator(const EdgeIterator& value):
@@ -159,7 +164,10 @@ EdgesContainer::EdgeIterator::~EdgeIterator()
 
 EdgesContainer::EdgeIterator& EdgesContainer::EdgeIterator::operator=(const EdgeIterator& value)
 {
-	return EdgeIterator(value);
+	this->_current = value._current;
+	this->_begin = value._begin;
+	this->_end = value._end;
+	return *this;
 }
 
 std::pair<long, long> EdgesContainer::EdgeIterator::operator*()
@@ -167,7 +175,7 @@ std::pair<long, long> EdgesContainer::EdgeIterator::operator*()
 	return *_current;
 }
 
-EdgesContainer::SetIterator EdgesContainer::EdgeIterator::operator->()
+EdgesContainer::EdgesSetIterator EdgesContainer::EdgeIterator::operator->()
 {
 	return _current;
 }

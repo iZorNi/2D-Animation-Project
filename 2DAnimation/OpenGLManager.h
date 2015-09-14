@@ -23,6 +23,8 @@ class OpenGLManager:public IUserInterfaceManager
 	std::shared_ptr<Renderer> renderer;
 	std::shared_ptr<OpenGLInputManager> input;
 	std::weak_ptr<IManager> manager;
+	bool leftPressed;
+	bool mouseMoved;
 
 public:
 	OpenGLManager();
@@ -30,7 +32,6 @@ public:
 	virtual ~OpenGLManager();
 	void init(int width, int height, int* argcp, char **argv, std::weak_ptr<IManager> manager);
 	void run();
-	bool leftPressed;
 	virtual void handleKeys(unsigned char key, int x, int y);
 	virtual void handleMouse(int button, int state, int x, int y);
 	virtual void handleMouseMotion(int x, int y);

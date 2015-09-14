@@ -10,6 +10,7 @@ protected:
 	typename T::iterator _current;
 	Iterator(typename T::iterator begin, typename T::iterator end, typename T::iterator current);
 public:
+	Iterator();
 	Iterator(const Iterator& value);
 	virtual ~Iterator();
 	Iterator& operator++();
@@ -17,10 +18,13 @@ public:
 	Iterator& operator--();
 	Iterator operator--(int);
 	virtual Iterator& operator=(const Iterator& value);
-	virtual bool operator==(PointIterator& value);
-	virtual bool operator!=(PointIterator& value);
+	virtual bool operator==(Iterator& value);
+	virtual bool operator!=(Iterator& value);
 };
 
+template<typename T>
+Iterator<T>::Iterator()
+{}
 template<typename T>
 Iterator<T>::Iterator(typename T::iterator begin, typename T::iterator end, typename T::iterator current)
 	: _begin(begin), _end(end), _current(current)
@@ -30,80 +34,44 @@ Iterator<T>::Iterator(const Iterator& value)
 	: _begin(value._begin), _end(value._end), _current(value._current)
 {}
 template<typename T>
-virtual Iterator<T>::~Iterator()
-{
-	_begin = nullptr;
-	_end = nullptr;
-	_current = nullptr;
-}
+Iterator<T>::~Iterator()
+{}
 template<typename T>
-virtual Iterator<T>& Iterator<T>::operator++()
+Iterator<T>& Iterator<T>::operator++()
 {
-	if (_current != _end)
-	{
-		do
-		{
-			++_current;
-		} while (_current != _end && !qualifier(*_current));
-	}
+	++_current;
 	return *this;
 }
 template<typename T>
-virtual Iterator<T> Iterator<T>::operator++(int)
+Iterator<T> Iterator<T>::operator++(int)
 {
 	auto tmp = *this;
-	if (_current != _end)
-	{
-		do
-		{
-			++_current;
-		} while (_current != _end && !qualifier(*_current));
-	}
+	++_current;
 	return tmp;
 }
 template<typename T>
-virtual Iterator<T>& Iterator<T>::operator--()
+Iterator<T>& Iterator<T>::operator--()
 {
-	if (_current != _begin)
-	{
-		--_current;
-		while (!qualifier(*_current))
-		{
-			if (_current == _begin)
-			{
-				_current = _end;
-				break;
-			}
-			--_current;
-		}
-	}
+	--_current;
+	return *this;
 }
 template<typename T>
-virtual Iterator<T> Iterator<T>::operator--(int)
+Iterator<T> Iterator<T>::operator--(int)
 {
 	auto tmp = *this;
-	if (_current != _begin)
-	{
-		--_current;
-		while (!qualifier(*_current))
-		{
-			if (_current == _begin)
-			{
-				_current = _end;
-				break;
-			}
-			--_current;
-		}
-	}
+	--_current;
 	return tmp;
 }
 template<typename T>
-virtual Iterator& Iterator<T>::operator=(const Iterator& value)
+Iterator<T>& Iterator<T>::operator=(const Iterator& value)
 {
-	return Iterator(value);
+	this->_current = value._current;
+	this->_begin = value._begin;
+	this->_end = value._end;
+	return *this;
 }
 template<typename T>
-virtual bool Iterator<T>::operator==(PointIterator& value)
+bool Iterator<T>::operator==(Iterator& value)
 {
 	if (this->_current != value._current
 		|| this->_begin != value._begin
@@ -117,7 +85,7 @@ virtual bool Iterator<T>::operator==(PointIterator& value)
 	}
 }
 template<typename T>
-virtual bool Iterator<T>::operator!=(PointIterator& value)
+bool Iterator<T>::operator!=(Iterator& value)
 {
 	return !(operator==(value));
 }

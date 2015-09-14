@@ -1,7 +1,5 @@
 #include "Point.h"
 
-typedef unsigned int uint;
-
 
 Point::Point()
 {
@@ -9,38 +7,30 @@ Point::Point()
 	y = 0;
 }
 
-uint Point::getX()
+Point::Point(int posX, int posY) 
+	:x(posX), y(posY) 
+{ };
+
+Point::Point(const Point& A)
+	: x(A.x) , y(A.y)
+{}
+
+int Point::getX()
 {
 	return x;
 }
 
-uint Point::getY()
+int Point::getY()
 {
 	return y;
 }
 
-uint Point::setX(uint posX)
+int Point::setX(int posX)
 {
 	return this->x = posX;
 }
 
-uint Point::setY(uint posY)
+int Point::setY(int posY)
 {
 	return this->y = posY;
 }
-
-/*long int Point::getId()
-{
-	return this->id;
-}
-
-long int Point::setId(long int id)
-{
-	this->id = id;
-	return this->id;
-}
-
-long int Point::decreaseId()
-{
-	return --id;
-}*/

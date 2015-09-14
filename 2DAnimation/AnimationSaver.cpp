@@ -2,19 +2,11 @@
 
 
 
-AnimationSaver::AnimationSaver():path("")
-{
-}
-
 AnimationSaver::~AnimationSaver()
 {
 }
 
-AnimationSaver::AnimationSaver(std::string path) :path(path)
-{
-};
-
-bool AnimationSaver::saveAnimation(std::weak_ptr<IFrameController> container)
+bool AnimationSaver::saveAnimation(std::string path, std::weak_ptr<IFrameController> container)
 {
 	if (!path.length() != 0)
 	{
@@ -31,15 +23,18 @@ bool AnimationSaver::saveAnimation(std::weak_ptr<IFrameController> container)
 		return false;
 	}
 	currentContainer = container.lock();
-	if (!writer.writeToFile<int>(currentContainer->totalNumberOfFrames()))
+	int total = currentContainer->totalNumberOfFrames();
+	if (!writer.writeToFile<int>(total))
 	{
 		return false;
 	}
+
 	//Fake-zero frame for algorithnm to be more consistent
-	int total = currentContainer->totalNumberOfFrames();
 	std::shared_ptr<Frame> fakeZeroShared = std::make_shared<Frame>(total);
 	std::weak_ptr<Frame>fakezero = std::weak_ptr<Frame>(fakeZeroShared);
 	std::weak_ptr<Frame> currentFrame = currentContainer->getFirstFrame();
+	
+	//save difference between first and empty frame
 	if(!saveDifference(currentFrame.lock()->getDifference(fakezero), writer))
 	{
 		return false;
@@ -56,65 +51,6 @@ bool AnimationSaver::saveAnimation(std::weak_ptr<IFrameController> container)
 		currentFrame = currentContainer->getCurrentFrame();
 	}
 	writer.closeOutputFile();
-	return true;
-}
-
-void AnimationSaver::setPath(std::string path)
-{
-	this->path = path;
-}
-
-bool AnimationSaver::saveFrame(std::shared_ptr<Frame> frame, FileManager& writer)
-{
-	bool res;
-	res = saveFrameID(frame->getID(),writer);
-	if (res)
-	{
-		res = savePoints(frame, writer);
-	}
-	if (res)
-	{
-		res = saveEdges(frame, writer);
-	}
-	return res;
-}
-
-bool AnimationSaver::saveFrameID(unsigned int id, FileManager& writer)
-{
-	return writer.writeToFile<unsigned int>(id);
-}
-
-bool AnimationSaver::savePoints(std::shared_ptr<Frame> frame, FileManager& writer)
-{
-	if (!writer.writeToFile<int>(frame->getNumberOfPoints()))
-	{
-		return false;
-	}
-	std::pair<long int, std::shared_ptr<Point>> p = frame->getFirstPoint();
-	while (p != frame->failurePoint)
-	{
-		if (!savePoint(p.first, p.second->getX(), p.second->getY(), Frame::Diff::ADDED, writer))
-		{
-			return false;
-		}
-		p = frame->getNextPoint();
-	}
-	return true;
-}
-
-bool AnimationSaver::saveEdges(std::shared_ptr<Frame> frame, FileManager& writer)
-{
-	if (!writer.writeToFile<unsigned int>(frame->getNumberOfEdges()))
-	{
-		return false;
-	}
-	std::pair<long int, long int> edgeIter = frame->getFirstEdge();
-	while (edgeIter.first != -1 && edgeIter.second != -1)
-	{
-		if (!saveEdge(edgeIter.first, edgeIter.second, Frame::Diff::ADDED,writer))
-			return false;
-		edgeIter = frame->getNextEdge();
-	}
 	return true;
 }
 
@@ -144,7 +80,11 @@ bool AnimationSaver::saveDifferencePoints(std::unique_ptr<Frame::Diff>& diff, Fi
 	std::map<long int, std::pair<std::shared_ptr<Point>, Frame::Diff::status>>::iterator pointIterator = diff->points.begin();
 	while (pointIterator != diff->points.end())
 	{
-		if (!savePoint(pointIterator->first, pointIterator->second.first->getX(), pointIterator->second.first->getY(), pointIterator->second.second, writer))
+		long id = pointIterator->first;
+		int x = pointIterator->second.first->getX();
+		int y = pointIterator->second.first->getY();
+		Frame::Diff::status status = pointIterator->second.second;
+		if (!savePoint(id, x, y, status, writer))
 		{
 			return false;
 		}

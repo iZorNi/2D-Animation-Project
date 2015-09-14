@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-
+//works with binary files
 class FileManager
 {
 	std::ifstream inputFile;
@@ -28,7 +28,6 @@ bool FileManager::writeToFile(T data)
 {
 	if (outputFile.out)
 		outputFile.write(reinterpret_cast<const char *>(&data), sizeof(data));
-		//outputFile << data;
 	return outputFile.out;
 }
 
@@ -44,7 +43,6 @@ bool FileManager::readFromFile(T& data)
 			inputFile.close();
 			return false;
 		}
-		//memcpy_s(&data, sizeof(data), tmp, sizeof(data));
 	}
 	return inputFile.in;
 

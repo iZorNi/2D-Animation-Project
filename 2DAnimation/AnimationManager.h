@@ -27,6 +27,7 @@ public:
 	virtual void removeEdge(int x, int y) ;
 	virtual void movePoint(int x, int y) ;
 	virtual void pickPoint(int x, int y) ;
+	virtual void freePickedPoint();
 	virtual void nextFrame() ;
 	virtual void previousFrame();
 	void setWeakPointerToThis(std::weak_ptr<AnimationManager> ptr);

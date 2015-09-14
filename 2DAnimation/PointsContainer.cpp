@@ -22,7 +22,7 @@ PointsContainer::iterator PointsContainer::end()
 
 PointsContainer::iterator PointsContainer::addPoint(int x, int y)
 {
-	MapIterator it = points.insert(std::make_pair(pointNextId, std::make_shared<Point>(x, y))).first;
+	PointsMapIterator it = points.insert(std::make_pair(pointNextId++, std::make_shared<Point>(x, y))).first;
 	return createIterator(it);
 }
 
@@ -32,7 +32,7 @@ PointsContainer::iterator PointsContainer::addPoint(long id, int x, int y)
 	return addPoint(x, y);
 }
 
-void PointsContainer::removePoint(MapIterator it)
+void PointsContainer::removePoint(PointsMapIterator it)
 {
 	if (it != points.end())
 	{
@@ -42,7 +42,7 @@ void PointsContainer::removePoint(MapIterator it)
 
 void PointsContainer::removePoint(long int id)
 {
-	MapIterator it = points.find(id);
+	PointsMapIterator it = points.find(id);
 	removePoint(it);
 }
 
@@ -54,28 +54,28 @@ void PointsContainer::removePoint(iterator point)
 
 void PointsContainer::removePoint(int x, int y)
 {
-	MapIterator it = findPoint(x, y);
+	PointsMapIterator it = findPoint(x, y);
 	removePoint(it);
 }
 
 PointsContainer::iterator PointsContainer::getPoint(long int id)
 {
-	MapIterator it = points.find(id);
+	PointsMapIterator it = points.find(id);
 	return createIterator(it);
 }
 
 PointsContainer::iterator PointsContainer::getPoint(int x, int y)
 {
-	MapIterator it = findPoint(x, y);
+	PointsMapIterator it = findPoint(x, y);
 	return createIterator(it);
 }
 
-PointsContainer::iterator PointsContainer::createIterator(MapIterator it)
+PointsContainer::iterator PointsContainer::createIterator(PointsMapIterator it)
 {
 	return PointIterator(points.begin(), points.end(), it);
 }
 
-PointsContainer::MapIterator PointsContainer::findPoint(int x, int y)
+PointsContainer::PointsMapIterator PointsContainer::findPoint(int x, int y)
 {
 	auto it = points.begin();
 	auto end = points.end();
@@ -99,12 +99,16 @@ int PointsContainer::size()
 //PointIterator
 //////////////////////////////////
 
-PointsContainer::PointIterator::PointIterator(MapIterator begin, MapIterator end) :
+PointsContainer::PointIterator::PointIterator(PointsMapIterator begin, PointsMapIterator end) :
 	Iterator<std::map<long int, std::shared_ptr<Point>>>(begin, end, begin)
 {}
 
-PointsContainer::PointIterator::PointIterator(MapIterator begin, MapIterator end, MapIterator current):
+PointsContainer::PointIterator::PointIterator(PointsMapIterator begin, PointsMapIterator end, PointsMapIterator current):
 	Iterator<std::map<long int, std::shared_ptr<Point>>>(begin, end, current)
+{}
+
+PointsContainer::PointIterator::PointIterator() :
+	Iterator<std::map<long int, std::shared_ptr<Point>>>()
 {}
 
 PointsContainer::PointIterator::PointIterator(const PointIterator& value):
@@ -116,7 +120,10 @@ PointsContainer::PointIterator::~PointIterator()
 
 PointsContainer::PointIterator& PointsContainer::PointIterator::operator=(const PointIterator& value)
 {
-	return PointIterator(value);
+	this->_current = value._current;
+	this->_begin = value._begin;
+	this->_end = value._end;
+	return *this;
 }
 
 Point PointsContainer::PointIterator::operator*()

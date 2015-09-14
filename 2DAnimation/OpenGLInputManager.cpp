@@ -1,57 +1,63 @@
 #include "OpenGLInputManager.h"
 
-static std::weak_ptr<OpenGLInputManager> weakPtrToThis;
-
-static void sHandleKeys(unsigned char key, int x, int y)
+namespace
 {
-	if (!weakPtrToThis.expired())
+	//pointer to this object, yes it's not safe, 
+	//but still need it to interact with OpenGL calllbacks
+	static std::weak_ptr<OpenGLInputManager> weakPtrToThis;
+	//static calls
+	//need this because opengl asks for (void*) functions and do not accept (Class::void*) functions
+	static void sHandleKeys(unsigned char key, int x, int y)
 	{
-		weakPtrToThis.lock()->handleKeys(key, x, y);
+		if (!weakPtrToThis.expired())
+		{
+			weakPtrToThis.lock()->handleKeys(key, x, y);
+		}
+	}
+	static void sHandleMouse(int button, int state, int x, int y)
+	{
+		if (!weakPtrToThis.expired())
+		{
+			weakPtrToThis.lock()->handleMouse(button, state, x, y);
+		}
+	}
+	static void sHandleMouseMotion(int x, int y)
+	{
+		if (!weakPtrToThis.expired())
+		{
+			weakPtrToThis.lock()->handleMouseMotion(x, y);
+		}
+	}
+	static void sReshapeHandler(int width, int height)
+	{
+		if (!weakPtrToThis.expired())
+		{
+			weakPtrToThis.lock()->reshapeHandler(width, height);
+		}
+	}
+	static void sCloseFunc()
+	{
+		if (!weakPtrToThis.expired())
+		{
+			weakPtrToThis.lock()->closeFunc();
+		}
+	}
+	static void sMenuHandler(int val)
+	{
+		if (!weakPtrToThis.expired())
+		{
+			weakPtrToThis.lock()->menuHandler(val);
+		}
+	}
+	static void sMenuStatusHandler(int status, int x, int y)
+	{
+		if (!weakPtrToThis.expired())
+		{
+			weakPtrToThis.lock()->menuStatusHandler(status, x, y);
+		}
 	}
 }
-static void sHandleMouse(int button, int state, int x, int y)
-{
-	if (!weakPtrToThis.expired())
-	{
-		weakPtrToThis.lock()->handleMouse(button, state, x, y);
-	}
-}
-static void sHandleMouseMotion(int x, int y)
-{
-	if (!weakPtrToThis.expired())
-	{
-		weakPtrToThis.lock()->handleMouseMotion(x, y);
-	}
-}
-static void sReshapeHandler(int width, int height)
-{
-	if (!weakPtrToThis.expired())
-	{
-		weakPtrToThis.lock()->reshapeHandler(width, height);
-	}
-}
-static void sCloseFunc()
-{
-	if (!weakPtrToThis.expired())
-	{
-		weakPtrToThis.lock()->closeFunc();
-	}
-}
-static void sMenuHandler(int val)
-{
-	if (!weakPtrToThis.expired())
-	{
-		weakPtrToThis.lock()->menuHandler(val);
-	}
-}
-static void sMenuStatusHandler(int status, int x, int y)
-{
-	if (!weakPtrToThis.expired())
-	{
-		weakPtrToThis.lock()->menuStatusHandler(status, x, y);
-	}
-}
-
+//sets weakPtrToThis
 void OpenGLInputManager::setSelfPointer(std::weak_ptr<OpenGLInputManager> weakPtr)
 {
 	weakPtrToThis = weakPtr;

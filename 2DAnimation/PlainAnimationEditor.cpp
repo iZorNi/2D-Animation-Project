@@ -21,58 +21,67 @@ bool PlainAnimationEditor::loadAnimation(std::string path)
 {
 	return slave->load(path);
 }
+
+std::string getPath()
+{
+	std::string path;
+	std::cout << "\nEnter path:  ";
+	std::cin >> path;
+	std::cout << "\n";
+	return path;
+}
+
 void PlainAnimationEditor::runEditor(int* argcp, char **argv)
 {
-	std::cout << "If you want to load file then enter path, else press enter\n";
+	std::cout << "If you want to load file press any key, else press enter\n";
 	std::string inputPath = "";
 	char c = _getch();
-	while (c == 0)
-	{
-		c = _getche();
-		if (c == VK_RETURN)
-			break;
-	}
 	if(c != VK_RETURN)
 	{
-		_ungetch(c);
-		std::cin >> inputPath;
+		inputPath = getPath();
 	}
-	inputPath = "D:/animation.paf";
 	if (inputPath != "")
 	{
-		loadAnimation(inputPath);
+		if (!loadAnimation(inputPath))
+		{
+			std::cout << "Fail...    ";
+		}
 	}
 	slave->init(0, 0, argcp, argv);
 	slave->run();
-	std::cout << "Do you want to save animation?(y/n)  ";
-	c = _getche();
-	while (c == 0)
+	std::cout << "\nDo you want to save animation?(y/n)  ";
+	c = _getch();
+	while (c != 'y' && c != 'Y' && c != 'n' && c != 'N')
 	{
-		c = _getche();
-		c = _getche();
+		c = _getch();
 	}
+	std::cout << c << '\n';
 	if (c == 'y' || c == 'Y')
 	{
-		std::cout << "\nEnter path or press enter to save to the input file\n  ";
+		std::cout << "Press any key or press enter to save to the input file\n  ";
 		std::string outputPath;
-		//c = _getche();
-		//if (c == 0)
-		//{
-		//	c = _getche();
-		//}
-		//else
-		//{
-		//	_ungetch(c);
-			outputPath = "D:/animation.paf";
-			std::cin >> outputPath;
-		//}
-		if (outputPath == "")
+		c = _getch();
+		if (c != VK_RETURN)
 		{
-			outputPath = inputPath;
+			outputPath = getPath();
 		}
-		if (saveAnimation(outputPath))
+		else
 		{
-			std::cout << "Ready...  ";
+			if (outputPath == "" && inputPath != "")
+			{
+				outputPath = inputPath;
+			}
+		}
+		if (outputPath != "")
+		{
+			if (saveAnimation(outputPath))
+			{
+				std::cout << "Ready...  ";
+			}
+			else
+			{
+				std::cout << "Fail...    ";
+			}
 		}
 		else
 		{

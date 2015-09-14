@@ -2,20 +2,11 @@
 
 
 
-AnimationLoader::AnimationLoader()
-{
-}
-
 AnimationLoader::~AnimationLoader()
 {
 }
 
-void AnimationLoader::setPath(std::string path)
-{
-	this->path = path;
-}
-
-bool AnimationLoader::loadAnimation(std::weak_ptr<IFrameController> container)
+bool AnimationLoader::loadAnimation(std::string path, std::weak_ptr<IFrameController> container)
 {
 	FileManager reader;
 	if (!reader.openFileForReading(path))
@@ -128,7 +119,7 @@ bool AnimationLoader::loadPoint(std::shared_ptr<Frame> frame, AnimationLoader::d
 			frame->addPoint(id, x, y);
 			break;
 		case Frame::Diff::MOVED:
-			if (frame->tryPickPoint(id))
+			if (frame->pickPoint(id))
 				frame->movePoint(x, y);
 			break;
 		case Frame::Diff::REMOVED:
@@ -186,17 +177,17 @@ bool AnimationLoader::loadEdge(std::shared_ptr<Frame> frame, AnimationLoader::dE
 	bool res = (edge.first.first != -1) && (edge.first.second != -1);
 	if (res)
 	{
-		int a = edge.first.first, b = edge.first.second;
+		long a = edge.first.first, b = edge.first.second;
 		Frame::Diff::status st = edge.second;
 		switch (st)
 		{
 		case Frame::Diff::ADDED:
-			res = frame->addEdge(a, b);
+			frame->addEdge(a, b);
 			break;
 		case Frame::Diff::MOVED:
 			break;
 		case Frame::Diff::REMOVED:
-			frame->removeEdge(a,b);
+			frame->removeEdgeByPoints(a,b);
 			break;
 		default:
 			break;

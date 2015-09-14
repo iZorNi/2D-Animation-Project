@@ -1,12 +1,12 @@
 #pragma once
 #include "Frame.h"
 #include "IUserInterfaceManager.h"
-#include "Dependencies\glew\GL\glew.h"
 #include "Dependencies\freeglut\GL\freeglut.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-
+//OpenGL renderer
+//should be singleton
 class Renderer
 {
 	const unsigned int START_WIDTH = 800;
@@ -24,8 +24,8 @@ class Renderer
 	void placePoint(int x,int y);
 	void renderEdge(std::pair<int, int> A, std::pair<int, int> B);
 	bool renderBackground();
-	bool renderPoints(std::shared_ptr<Frame> renderedFrame);
-	bool renderEdges(std::shared_ptr<Frame> renderedFrame);
+	bool renderPoints(PointsContainer::PointIterator pointsBegin, int size, std::shared_ptr<Frame> renderedFrame);
+	bool renderEdges(EdgesContainer::EdgeIterator edgesBegin, int size, PointsContainer::iterator pointsEnd, std::shared_ptr<Frame> renderedFrame);
 	bool checkError();
 	void checkSize(int& w, int& h);
 	bool renderFrameNumber(std::shared_ptr<Frame> renderedFrame);
@@ -36,9 +36,9 @@ public:
 	~Renderer();
 	Renderer(unsigned int width, unsigned int height);
 	void renderFrame();
-	void renderFrame(Frame::PointIterator point, Frame::EdgeIterator edge);
-	bool renderPoints(Frame::PointIterator point);
-	bool renderEdges(Frame::EdgeIterator edge);
+	//void renderFrame(Frame::PointIterator point, Frame::EdgeIterator edge);
+	//bool renderPoints(Frame::PointIterator point);
+	//bool renderEdges(Frame::EdgeIterator edge);
 	bool restoreWindowSize(int width,int height);
 	bool init(int* argcp, char **argv, int width, int height, std::weak_ptr<IUserInterfaceManager> uiManager);
 	void setWindowSize(int width, int height);

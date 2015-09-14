@@ -2,7 +2,8 @@
 #include "IManager.h"
 
 
-
+//class handles menu options
+//now there's only three, but if number grow it can be mainatained more easily
 class MenuManager
 {
 	enum MenuEntries

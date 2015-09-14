@@ -9,6 +9,8 @@ enum MenuEntries
 	ADD_POINT=0, REMOVE_POINT, REMOVE_EDGE
 };
 
+//redirects OpenGL input callbacks(menu, keyboard, mouse)
+//should be singleton
 class OpenGLInputManager
 {
 	std::weak_ptr<IUserInterfaceManager> mainManager;

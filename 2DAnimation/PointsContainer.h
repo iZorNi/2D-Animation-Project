@@ -5,15 +5,15 @@ class PointsContainer
 {
 public:
 	class PointIterator;
-	typedef std::map<long int, std::shared_ptr<Point>>::iterator MapIterator;
-	typedef std::map<long int, std::shared_ptr<Point>>::const_iterator MapIterator_const;
+	typedef std::map<long int, std::shared_ptr<Point>>::iterator PointsMapIterator;
+	typedef std::map<long int, std::shared_ptr<Point>>::const_iterator PointsMapIterator_const;
 	typedef PointIterator iterator;
 private:
 	std::map<long int, std::shared_ptr<Point>> points;
 	long int pointNextId;
-	MapIterator findPoint(int x, int y);
-	void removePoint(MapIterator it);
-	iterator createIterator(MapIterator it);
+	PointsMapIterator findPoint(int x, int y);
+	void removePoint(PointsMapIterator it);
+	iterator createIterator(PointsMapIterator it);
 public:
 
 	PointsContainer();
@@ -24,6 +24,7 @@ public:
 	//returns itearator pointing to added point
 	iterator addPoint(int x, int y);
 	iterator addPoint(long id, int x, int y);
+	iterator copyPoint(iterator pointIterator);
 	void removePoint(iterator point);
 	void removePoint(int x, int y);
 	void removePoint(long int id);
@@ -37,9 +38,10 @@ class PointsContainer::PointIterator:public  Iterator<std::map<long int, std::sh
 {
 	friend class PointsContainer;
 protected:
-	PointIterator(MapIterator begin, MapIterator end);
-	PointIterator(MapIterator begin, MapIterator end, MapIterator current);
+	PointIterator(PointsMapIterator begin, PointsMapIterator end);
+	PointIterator(PointsMapIterator begin, PointsMapIterator end, PointsMapIterator current);
 public:
+	PointIterator();
 	virtual ~PointIterator();
 	PointIterator(const PointIterator& value);
 	virtual PointIterator& operator=(const PointIterator& value);

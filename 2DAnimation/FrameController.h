@@ -5,9 +5,13 @@
 
 class FrameController:public IFrameController
 {
+public:
+	class FrameIterator;
+	typedef FrameIterator iterator;
+	typedef std::list<std::shared_ptr<Frame>>::iterator FrameListIterator;
+private:
 	std::list<std::shared_ptr<Frame>> frames;
-	typedef std::list<std::shared_ptr<Frame>>::iterator LIter;
-	LIter currentFrame;
+	FrameListIterator currentFrame;
 public:
 	FrameController();
 	~FrameController();
@@ -24,33 +28,20 @@ public:
 	virtual int totalNumberOfFrames();
 	virtual void clear();
 	//add events' processing
-
-	class FrameIterator
-	{
-		LIter _begin;
-		LIter _end;
-		LIter _current;
-		std::function<bool(std::shared_ptr<Frame>)> qualifier;
-		typedef std::list<std::shared_ptr<Frame>>::iterator LIter;
-		int qualifierID;
-		void initCurrent();
-	public:
-		FrameIterator(LIter begin, LIter end, std::function<bool(std::shared_ptr<Frame>)> qualifier = &allFramesQualifier);
-		FrameIterator(LIter begin, LIter end, int id, std::function<bool(std::shared_ptr<Frame>)> qualifier = &frameWithIdQualifier);
-		bool frameWithIdQualifier(std::shared_ptr<Frame> frame);
-		bool allFramesQualifier(std::shared_ptr<Frame> frame);
-		std::shared_ptr<Frame> operator*();
-		std::shared_ptr<Frame> operator->();
-		FrameIterator& operator++();
-		FrameIterator operator++(int);
-		FrameIterator& operator--();
-		FrameIterator operator--(int);
-		FrameIterator& operator=(const FrameIterator& value);
-		bool operator==(FrameIterator& value);
-		bool operator!=(FrameIterator& value);
-		~FrameIterator() {};
-		const FrameIterator end();
-		const FrameIterator begin();
-	};
 };
 
+class FrameController::FrameIterator :Iterator<std::list<std::shared_ptr<Frame>>>
+{
+	friend class FrameController;
+protected:
+	FrameIterator(FrameListIterator begin, FrameListIterator end);
+	FrameIterator(FrameListIterator begin, FrameListIterator end, FrameListIterator current);
+public:
+	FrameIterator();
+	virtual ~FrameIterator();
+	FrameIterator(const FrameIterator& value);
+	virtual FrameIterator& operator=(const FrameIterator& value);
+	Frame operator*();
+	std::shared_ptr<Frame> operator->();
+
+};

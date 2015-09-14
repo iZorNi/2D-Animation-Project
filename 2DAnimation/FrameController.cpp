@@ -64,7 +64,7 @@ std::weak_ptr<Frame> FrameController::addFrame()
 
 std::weak_ptr<Frame> FrameController::addEmptyFrame()
 {
-	uint id;
+	unsigned int id;
 	if (frames.size() > 0)
 	{
 		id = (*(--frames.end()))->getID();
@@ -99,7 +99,7 @@ void FrameController::addFrame(std::shared_ptr<Frame> frame)
 
 void FrameController::clear()
 {
-	LIter it = frames.begin();
+	FrameListIterator it = frames.begin();
 	while (it != frames.end())
 	{
 		frames.erase(it++);
@@ -110,130 +110,43 @@ std::weak_ptr<Frame> FrameController::begin()
 {
 	return std::weak_ptr<Frame>(*frames.begin());
 }
+
 std::weak_ptr<Frame> FrameController::end()
 {
 	return std::weak_ptr<Frame>();
 }
 
-FrameController::FrameIterator::FrameIterator(LIter begin, LIter end, std::function<bool(std::shared_ptr<Frame>)> qualifier)
-	: _begin(begin), _end(end), qualifier(qualifier)
-{
-}
-FrameController::FrameIterator::FrameIterator(LIter begin, LIter end, int id, std::function<bool(std::shared_ptr<Frame>)> qualifier)
-	: _begin(begin), _end(end), qualifier(qualifier), qualifierID(id)
-{
-}
-void FrameController::FrameIterator::initCurrent()
-{
-	_current = _begin;
-	while (!qualifier(*_current))
-	{
-		++_current;
-	}
-}
-bool FrameController::FrameIterator::frameWithIdQualifier(std::shared_ptr<Frame> frame)
-{
-	return true;
-}
-bool FrameController::FrameIterator::allFramesQualifier(std::shared_ptr<Frame> frame)
-{
-	return frame->getID() == qualifierID;
-}
+FrameController::FrameIterator::FrameIterator(FrameListIterator begin, FrameListIterator end) :
+	Iterator<std::list<std::shared_ptr<Frame>>>(begin, end, begin)
+{}
 
-std::shared_ptr<Frame> FrameController::FrameIterator::operator*()
-{
-	return *(_current);
-}
-std::shared_ptr<Frame> FrameController::FrameIterator::operator->()
-{
-	return *(_current);
-}
-FrameController::FrameIterator& FrameController::FrameIterator::operator++()
-{
-	if (_current != _end)
-	{
-		do
-		{
-			++_current;
-		} while (_current != _end && !qualifier(*_current));
-	}
-	return *this;
-}
-FrameController::FrameIterator FrameController::FrameIterator::operator++(int)
-{
-	auto tmp = *this;
-	if (_current != _end)
-	{
-		do
-		{
-			++_current;
-		} while (_current != _end && !qualifier(*_current));
-	}
-	return tmp;
-}
-FrameController::FrameIterator& FrameController::FrameIterator::operator--()
-{
-	if (_current != _begin)
-	{
-		--_current;
-		while (!qualifier(*_current))
-		{
-			if (_current == _begin)
-			{
-				_current = _end;
-				break;
-			}
-			--_current;
-		}
-	}
-	return *this;
-}
-FrameController::FrameIterator FrameController::FrameIterator::operator--(int)
-{
-	auto tmp = *this;
-	if (_current != _begin)
-	{
-		--_current;
-		while (!qualifier(*_current))
-		{
-			if (_current == _begin)
-			{
-				_current = _end;
-				break;
-			}
-			--_current;
-		}
-	}
-	return tmp;
-}
+FrameController::FrameIterator::FrameIterator(FrameListIterator begin, FrameListIterator end, FrameListIterator current) :
+	Iterator<std::list<std::shared_ptr<Frame>>>(begin, end, current)
+{}
+
+FrameController::FrameIterator::FrameIterator() :
+	Iterator<std::list<std::shared_ptr<Frame>>>()
+{}
+
+FrameController::FrameIterator::FrameIterator(const FrameIterator& value) :
+	Iterator<std::list<std::shared_ptr<Frame>>>(value._begin, value._end, value._current)
+{}
+
 FrameController::FrameIterator& FrameController::FrameIterator::operator=(const FrameIterator& value)
 {
-	this->qualifierID = value.qualifierID;
-	this->_current = value._current;
+	*this =  FrameIterator(value);
 	return *this;
 }
-bool FrameController::FrameIterator::operator==(FrameIterator& value)
+
+FrameController::FrameIterator::~FrameIterator()
+{}
+
+Frame FrameController::FrameIterator::operator*()
 {
-	if (_current != value._current || _end != value._end
-		|| _begin != value._begin  || qualifierID !=value.qualifierID)
-	{
-		return false;
-	}
-	return true;
+	return **_current;
 }
-bool FrameController::FrameIterator::operator!=(FrameIterator& value)
+
+std::shared_ptr<Frame> FrameController::FrameIterator::operator->()
 {
-	return !operator==(value);
-}
-const FrameController::FrameIterator FrameController::FrameIterator::end()
-{
-	auto tmp = *this;
-	tmp._current = _begin;
-	return tmp;
-}
-const FrameController::FrameIterator FrameController::FrameIterator::begin()
-{
-	auto tmp = *this;
-	tmp._current = _begin;
-	return tmp;
+	return *_current;
 }
