@@ -9,6 +9,7 @@
 //should be singleton
 class Renderer
 {
+	static std::weak_ptr<Renderer> instance;
 	const unsigned int START_WIDTH = 800;
 	const unsigned int START_HEIGHT = 600;
 	const unsigned int POINT_SIZE = 6;
@@ -24,21 +25,19 @@ class Renderer
 	void placePoint(int x,int y);
 	void renderEdge(std::pair<int, int> A, std::pair<int, int> B);
 	bool renderBackground();
-	bool renderPoints(PointsContainer::PointIterator pointsBegin, int size, std::shared_ptr<Frame> renderedFrame);
-	bool renderEdges(EdgesContainer::EdgeIterator edgesBegin, int size, PointsContainer::iterator pointsEnd, std::shared_ptr<Frame> renderedFrame);
+	bool renderPoints(PointsContainer::PointIterator pointsBegin, int size, std::function<bool(long)> isPickedPoint);
+	bool renderEdges(EdgesContainer::EdgeIterator edgesBegin, int size, PointsContainer::iterator pointsEnd, std::function<PointsContainer::PointIterator(long)> getPoint);
 	bool checkError();
 	void checkSize(int& w, int& h);
 	bool renderFrameNumber(std::shared_ptr<Frame> renderedFrame);
-
-public:
-	Renderer();
-	void setSelfPointer(std::weak_ptr<Renderer> weakPtr);
-	~Renderer();
 	Renderer(unsigned int width, unsigned int height);
+	Renderer();
+public:
+	static std::shared_ptr<Renderer> getInstance();
+	//void setSelfPointer(std::weak_ptr<Renderer> weakPtr);
+	Renderer(const Renderer& value);
+	~Renderer();
 	void renderFrame();
-	//void renderFrame(Frame::PointIterator point, Frame::EdgeIterator edge);
-	//bool renderPoints(Frame::PointIterator point);
-	//bool renderEdges(Frame::EdgeIterator edge);
 	bool restoreWindowSize(int width,int height);
 	bool init(int* argcp, char **argv, int width, int height, std::weak_ptr<IUserInterfaceManager> uiManager);
 	void setWindowSize(int width, int height);

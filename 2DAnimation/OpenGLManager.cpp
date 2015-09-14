@@ -3,10 +3,10 @@
 
 OpenGLManager::OpenGLManager()
 {
-	renderer = std::make_shared<Renderer>();
-	input = std::make_shared<OpenGLInputManager>();
-	renderer->setSelfPointer(std::weak_ptr<Renderer>(renderer));
-	input->setSelfPointer(std::weak_ptr<OpenGLInputManager>(input));
+	renderer = Renderer::getInstance();
+	input = OpenGLInputManager::getInstance();
+	//renderer->setSelfPointer(std::weak_ptr<Renderer>(renderer));
+	//input->setSelfPointer(std::weak_ptr<OpenGLInputManager>(input));
 }
 
 void OpenGLManager::setSelfPointer(std::weak_ptr<OpenGLManager> weakPtr)
